@@ -28,6 +28,10 @@ void kmain( void* mbd, unsigned int magic )
    init_tty();
    clear();
    puts("kernel start");
+   for(i=0; i<80 * 20; i++)
+   {
+	   putchar('a');
+   }
    init_gdt();
    init_idt();
    /* Write your kernel here. */
