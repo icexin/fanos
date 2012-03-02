@@ -25,13 +25,11 @@ void kmain( void* mbd, unsigned int magic )
       /* data structure. */
    }
    unsigned int i;
+   char str[20];
    init_tty();
    clear();
    puts("kernel start");
-   for(i=0; i<80 * 20; i++)
-   {
-	   putchar('a');
-   }
+   printf("%d", 2);
    init_gdt();
    init_idt();
    /* Write your kernel here. */
