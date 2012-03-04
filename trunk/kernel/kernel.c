@@ -11,24 +11,47 @@ void init_gdt()
 	init_gdt_desc(0, 0, 0, 0); //空段
 	init_gdt_desc(1, 0, 0xFFFFF, DA_CR | DA_32 | DA_LIMIT_4K); //代码段
 	init_gdt_desc(2, 0, 0xFFFFF, DA_DRW | DA_32 | DA_LIMIT_4K); //数据段
+	init_gdt_desc(3,  );
 
 	*gdt_ptr_limit = GDT_SIZE;
 	*gdt_ptr_base = (u32*)gdt;
 	__asm__ __volatile__("lgdt gdt_ptr\n\t");
 
 }
- 
-void init_gdt_desc(unsigned char vector, u32 base, u32 limit, u16 flag)
+
+void init_ldt()
 {
-	DESCRIPTOR *d = gdt + vector;
+	init_ldt_desc(0, 0x4 * 0x100000, 0x400);
+	init_ldt_desc(1, 0x8 * 0x100000, 0x400);
+}
+
+void init_tss()
+{
+	tss[
+
+ 
+void create_descriptor(DESCRIPTOR d, u32 base, u32 limit, u16 flag)
+{
 	d->limit_low = limit & 0xFFFF; 
 	d->base_low = base & 0xFFFF;
 	d->base_mid = (base >> 16) & 0xFF;
 	d->attr1 = flag & 0xFF;
 	d->limit_high_attr2 = ((limit >> 16) & 0x0F) | ((flag >> 8) & 0xF0);
 	d->base_high = (base >> 24) & 0xFF;
+}
+
+void init_gdt_desc(unsigned char vector, u32 base, u32 limit, u16 flag)
+{
+	create_descriptor(gdt + vector, base, limit, flag);
 }	
 
+void init_ldt_desc(unsigned char vector, u32 base, u32 limit)
+{
+	DESCRIPTOR *d = ldt[vector];
+	create_descriptor(d, 0, 0, 0);
+	create_descriptor(d + 1, base, limit, DA_32 | DA_CR | DA_LIMIT_4K );
+	create_descriptor(d + 1, base, limit, DA_32 | DA_DRW | DA_LIMIT_4K );
+}
 
 
 
