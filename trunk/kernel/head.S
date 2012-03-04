@@ -20,7 +20,7 @@ loader:
 	push %eax
 	push %ebx
 	cli
-	call kmain
+	call main
 	sti
 
 hang:

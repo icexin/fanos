@@ -1,52 +1,6 @@
-#include <type.h>
-#include <protect.h>
-#include <global.h>
-#include <const.h>
-#include <string.h>
+#include <kernel.h>
 
-void clear();
-
-char create_descriptor(DESCRIPTOR* d, u32 base, u32 limit, u16 flag);
-void init_gdt();
-void init_idt_desc(unsigned char vector, u8 desc_type, int_handler handler, unsigned char privilege);
-void init_idt();
-void init_8259A();
-void out_byte(u16 port, u8 out_data);
-u8 in_byte(u16 port);
-void handle();
 void keyboard();
-
-void kmain( void* mbd, unsigned int magic )
-{
-   if ( magic != 0x2BADB002 )
-   {
-      /* Something went not according to specs. Print an error */
-      /* message and halt, but do *not* rely on the multiboot */
-      /* data structure. */
-   }
-   unsigned int i;
-   char str[20];
-   init_tty();
-   clear();
-   puts("kernel start");
-   printf("%d", 2);
-   init_gdt();
-   init_idt();
-   /* Write your kernel here. */
-}
-
-
-
-void clear()
-{
-
-   unsigned char *videoram = (unsigned char *) 0xb8000;
-   int i;
-   for (i=0;i<80*25;i++) {
-       videoram[i*2] = ' '; /* character 'A' */
-       videoram[1] = 0x07; /* forground, background color. */
-   }
-}
 
 void init_gdt()
 {
@@ -167,10 +121,4 @@ void init_idt()
 
 }
 
-
-void handle()
-{
-	putchar('a');
-	in_byte(0x60);
-}
 
