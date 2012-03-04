@@ -27,7 +27,8 @@ void init_ldt()
 
 void init_tss()
 {
-	tss[
+	tss[];
+}
 
  
 void create_descriptor(DESCRIPTOR d, u32 base, u32 limit, u16 flag)
