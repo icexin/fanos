@@ -12,7 +12,9 @@ mount:
 		sudo mount -t ext2 -o loop,offset=32256 images/hd.img osimg \
 	;fi 
 umount:
-	sudo umount osimg
+	if grep 'osimg' /etc/mtab; then \
+		sudo umount osimg \
+	;fi
 
 
 run:mount kernel
@@ -24,7 +26,7 @@ debug:mount kernel
 	sudo strip --strip-debug osimg/kernel.bin && sync
 	bochs -q   -f script/bochsrc_dbg&
 	gdb
-kernel.bin:kernel/kernel.o kernel/head.o kernel/global.o kernel/asm.o lib/string.o
+kernel.bin:init/main.o kernel/kernel.o kernel/head.o kernel/global.o kernel/asm.o lib/string.o kernel/tty.o kernel/keyboard.o
 	ld -T script/linker.ld $^ -o$@
 clean:umount
 	rm -f kernel.bin
