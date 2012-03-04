@@ -84,7 +84,7 @@ int vsprintf(char *str, const char *fmt, var_list args)
 		{
 			case 'c':
 				*str++ = *((char*)args);
-				args += 1;
+				args += 4;
 				break;
 			case 's':
 				strcpy(str, *(char**)args);
