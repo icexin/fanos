@@ -7,3 +7,7 @@ void handle()
 	ch = in_byte(0x60);
 	printf("%x,", ch);
 }
+void handle_timer()
+{
+	printf("%c%c", '#','#');
+}

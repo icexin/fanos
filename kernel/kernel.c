@@ -1,15 +1,16 @@
 #include <kernel.h>
 
 void keyboard();
+void timer();
 
 void init_gdt()
 {
 	u16 *gdt_ptr_limit = (u16*)gdt_ptr; //gdt界限
 	u32 **gdt_ptr_base  = (u32**)(gdt_ptr + 2);//gdt基址
 
-	create_descriptor(gdt, 0, 0, 0); //空段
-	create_descriptor(gdt + 1, 0, 0xFFFFF, DA_CR | DA_32 | DA_LIMIT_4K); //代码段
-	create_descriptor(gdt + 2, 0, 0xFFFFF, DA_DRW | DA_32 | DA_LIMIT_4K); //数据段
+	init_gdt_desc(0, 0, 0, 0); //空段
+	init_gdt_desc(1, 0, 0xFFFFF, DA_CR | DA_32 | DA_LIMIT_4K); //代码段
+	init_gdt_desc(2, 0, 0xFFFFF, DA_DRW | DA_32 | DA_LIMIT_4K); //数据段
 
 	*gdt_ptr_limit = GDT_SIZE;
 	*gdt_ptr_base = (u32*)gdt;
@@ -17,18 +18,15 @@ void init_gdt()
 
 }
  
-char create_descriptor(DESCRIPTOR *d, u32 base, u32 limit, u16 flag)
+void init_gdt_desc(unsigned char vector, u32 base, u32 limit, u16 flag)
 {
-
+	DESCRIPTOR *d = gdt + vector;
 	d->limit_low = limit & 0xFFFF; 
 	d->base_low = base & 0xFFFF;
 	d->base_mid = (base >> 16) & 0xFF;
 	d->attr1 = flag & 0xFF;
 	d->limit_high_attr2 = ((limit >> 16) & 0x0F) | ((flag >> 8) & 0xF0);
 	d->base_high = (base >> 24) & 0xFF;
-
-
-	return '0' ;
 }	
 
 
@@ -99,11 +97,6 @@ void init_8259A()
 	/* Slave  8259, ICW4. */
 	out_byte(INT_S_CTLMASK,	0x1);
 
-	/* Master 8259, OCW1.  */
-	out_byte(INT_M_CTLMASK,	0xFD);
-
-	/* Slave  8259, OCW1.  */
-	out_byte(INT_S_CTLMASK,	0xFF);
 }
 
 void init_idt()
@@ -113,7 +106,13 @@ void init_idt()
 
 	init_8259A();
 	init_idt_desc(0x21, DA_386IGate, keyboard, PRIVILEGE_KRNL);
+	init_idt_desc(0x20, DA_386IGate, timer, PRIVILEGE_KRNL);
 
+	//8259a主芯片的中断mask
+	out_byte(INT_M_CTLMASK,	0xFE);
+
+	//8259a从芯片的中断mask
+	out_byte(INT_S_CTLMASK,	0xFF);
 
 	*idt_ptr_limit = IDT_SIZE * sizeof(GATE) - 1;
 	*idt_ptr_base = (u32*)idt;
@@ -121,4 +120,10 @@ void init_idt()
 
 }
 
-
+#define CLK_8253 1193180
+void init_timer()
+{
+	out_byte(0x43, 0x36); //控制字：通道0工作在方式3，计数初值采用二进制
+	out_byte(0x40, CLK_8253 / 100 & 0xFF); //100hz
+	out_byte(0x40, (CLK_8253 / 100 >> 8) & 0xFF);
+}
