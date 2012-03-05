@@ -3,13 +3,12 @@
 .global enable_int
 .global disable_int
 .global move_to_user
-.global taska
-.global taskb
 
 .extern handle
 .extern handle_timer
 .extern putchar
 .extern taska
+.extern taskb
 .text
 keyboard:
 	call handle
@@ -43,21 +42,5 @@ move_to_user:
 	pushfl
 	pushl $0x0F
 	pushl $taska
-	iret
+	ret
 	
-taska:
-	mov $0xb8000, %ebx
-	mov $0x17, %ax
-	mov %ax, %gs
-	mov $'a', %al
-L1:	movb %al, %gs:(%ebx)
-	jmp L1
-
-
-taskb:
-	mov $0xb8000, %ebx
-	mov $0x17, %ax
-	mov %ax, %gs
-	mov $'b', %al
-L2:	movb %al, %gs:(%ebx)
-	jmp L2

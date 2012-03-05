@@ -178,6 +178,6 @@ void init_idt()
 void init_timer()
 {
 	out_byte(0x43, 0x36); //控制字：通道0工作在方式3，计数初值采用二进制
-	out_byte(0x40, CLK_8253 / 100 & 0xFF); //100hz
-	out_byte(0x40, (CLK_8253 / 100 >> 8) & 0xFF);
+	out_byte(0x40, CLK_8253 / 1000 & 0xFF ); //100hz
+	out_byte(0x40, (CLK_8253 / 1000 >> 8 ) & 0xFF);
 }
