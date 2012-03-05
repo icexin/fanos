@@ -26,6 +26,14 @@ debug:mount kernel
 	sudo strip --strip-debug osimg/kernel.bin && sync
 	bochs -q   -f script/bochsrc_dbg&
 	gdb
+local:mount kernel
+	sudo cp kernel.bin osimg/kernel.bin 
+	sudo strip --strip-debug osimg/kernel.bin && sync
+	bochs_local -q   -f script/bochsrc
+kernel/global.o:include/global.h
+
+
+
 kernel.bin:init/main.o kernel/kernel.o kernel/head.o kernel/global.o kernel/asm.o lib/string.o kernel/tty.o kernel/keyboard.o
 	ld -T script/linker.ld $^ -o$@
 clean:umount
