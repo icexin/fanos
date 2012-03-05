@@ -21,7 +21,12 @@ int tty_write(char *str, int len)
 			videoram[(pos_row * 80 + pos_col++) * 2] = str[i];
 		}
 	}
-	disable_int();
+
+	if(pos_row > 80)
+	{
+		pos_row = 0;
+	}
+/*	disable_int();
 	out_byte(0x3D4, 0x0E);
 	out_byte(0x3D5, (pos_row * 80 + pos_col) >> 8);
 
@@ -29,6 +34,7 @@ int tty_write(char *str, int len)
 	out_byte(0x3D5, (pos_row * 80 + pos_col) & 0xFF);
 
 	enable_int();
+*/
 }
 
 
