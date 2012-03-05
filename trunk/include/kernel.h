@@ -3,7 +3,6 @@
 
 #include <type.h>
 #include <protect.h>
-#include <global.h>
 #include <const.h>
 
 void init_gdt_desc(unsigned char vector, u32 base, u32 limit, u16 flag);
@@ -14,6 +13,10 @@ void init_8259A();
 void out_byte(u16 port, u8 out_data);
 u8 in_byte(u16 port);
 void init_timer();
+void init_ldt_desc(unsigned char vector, u32 base, u32 limit);
+void init_tss();
+void create_descriptor(DESCRIPTOR *d, u32 base, u32 limit, u16 flag);
+
 
 typedef struct _tss
 {
@@ -26,7 +29,7 @@ typedef struct _tss
 	u32 ss2;
 	u32 cr3;
 	u32 eip;
-	u32 flags;
+	u32 eflags;
 	u32 eax;
 	u32 ecx;
 	u32 edx;
@@ -45,5 +48,6 @@ typedef struct _tss
 	u16 trap;
 	u16 iobase;
 }TSS;
+
 
 #endif

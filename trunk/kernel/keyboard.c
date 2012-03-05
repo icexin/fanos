@@ -1,5 +1,7 @@
 #include <tty.h>
 unsigned char keymap;
+int choice = 1;
+
 
 void handle()
 {
@@ -9,5 +11,16 @@ void handle()
 }
 void handle_timer()
 {
-	printf("%c%c", '#','#');
+	if(choice == 0)
+	{
+	//	__asm__("ljmp $0x28, $0");
+	}
+	else
+	{
+		//__asm__("ljmp $0x30, $0");
+	}
+
+	choice = !choice;
+	putchar('#');
+	
 }

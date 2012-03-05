@@ -1,7 +1,11 @@
 #include <kernel.h>
+#include <global.h>
 
 void keyboard();
 void timer();
+void taska();
+void taskb();
+
 
 void init_gdt()
 {
@@ -11,7 +15,13 @@ void init_gdt()
 	init_gdt_desc(0, 0, 0, 0); //空段
 	init_gdt_desc(1, 0, 0xFFFFF, DA_CR | DA_32 | DA_LIMIT_4K); //代码段
 	init_gdt_desc(2, 0, 0xFFFFF, DA_DRW | DA_32 | DA_LIMIT_4K); //数据段
-	init_gdt_desc(3,  );
+	init_gdt_desc(3, (u32)(ldt + 0), sizeof(DESCRIPTOR)* 4, DA_LDT);
+	init_gdt_desc(4, (u32)(ldt + 1), sizeof(DESCRIPTOR)* 4, DA_LDT);
+	init_gdt_desc(5, (u32)(tss + 0), sizeof(TSS), DA_386TSS);
+	init_gdt_desc(6, (u32)(tss + 1), sizeof(TSS), DA_386TSS);
+
+	init_ldt();
+	init_tss();
 
 	*gdt_ptr_limit = GDT_SIZE;
 	*gdt_ptr_base = (u32*)gdt;
@@ -21,17 +31,37 @@ void init_gdt()
 
 void init_ldt()
 {
-	init_ldt_desc(0, 0x4 * 0x100000, 0x400);
-	init_ldt_desc(1, 0x8 * 0x100000, 0x400);
+	init_ldt_desc(0, 0, 0xFFFFF);
+	init_ldt_desc(1, 0, 0xFFFFF);
 }
 
 void init_tss()
 {
-	tss[];
+	int i;
+	for(i=0; i<2; i++)
+	{
+		tss[i].esp0 = 0x100000 + 0x4000;
+		tss[i].ss0 = 0x10;
+		tss[i].eflags = 0x200;
+		tss[i].esp = 0x100000 + 0x100000;
+		tss[i].es = 0x17;
+		tss[i].cs = 0x0F;
+		tss[i].ss = 0x17;
+		tss[i].ds = 0x17;
+		tss[i].fs = 0x17;
+		tss[i].gs = 0x17;
+	}
+
+	tss[0].esp0 = 0x100000 + 0x100000;
+	tss[1].esp0 = 0x100000 + 0x200000;
+	tss[0].eip = taska;
+	tss[1].eip = taskb;
+	tss[0].ldt = 0x18;
+	tss[1].ldt = 0x20;
 }
 
  
-void create_descriptor(DESCRIPTOR d, u32 base, u32 limit, u16 flag)
+void create_descriptor(DESCRIPTOR *d, u32 base, u32 limit, u16 flag)
 {
 	d->limit_low = limit & 0xFFFF; 
 	d->base_low = base & 0xFFFF;
@@ -50,8 +80,8 @@ void init_ldt_desc(unsigned char vector, u32 base, u32 limit)
 {
 	DESCRIPTOR *d = ldt[vector];
 	create_descriptor(d, 0, 0, 0);
-	create_descriptor(d + 1, base, limit, DA_32 | DA_CR | DA_LIMIT_4K );
-	create_descriptor(d + 1, base, limit, DA_32 | DA_DRW | DA_LIMIT_4K );
+	create_descriptor(d + 1, base, limit, DA_DPL3 | DA_32 | DA_CR | DA_LIMIT_4K );
+	create_descriptor(d + 2, base, limit, DA_DPL3 | DA_32 | DA_DRW | DA_LIMIT_4K );
 }
 
 

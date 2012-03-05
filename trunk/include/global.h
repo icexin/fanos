@@ -27,5 +27,4 @@ EXTERN	DESCRIPTOR	gdt[GDT_SIZE];
 EXTERN	u8		idt_ptr[6];	/* 0~15:Limit  16~47:Base */
 EXTERN	GATE		idt[IDT_SIZE];
 EXTERN  DESCRIPTOR  ldt[TASK_SIZE][3];
-EXTERN  u8	    ldt_ptr[TASK_SIZE][6];
 EXTERN  TSS     tss[TASK_SIZE];
