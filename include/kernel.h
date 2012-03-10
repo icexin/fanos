@@ -14,6 +14,7 @@ void out_byte(u16 port, u8 out_data);
 u8 in_byte(u16 port);
 void init_timer();
 void init_ldt_desc(unsigned char vector, u32 base, u32 limit);
+void init_ldt();
 void init_tss();
 void create_descriptor(DESCRIPTOR *d, u32 base, u32 limit, u16 flag);
 
@@ -47,6 +48,7 @@ typedef struct _tss
 	u32 ldt;
 	u16 trap;
 	u16 iobase;
+	char stack[1024 * 4];
 }TSS;
 
 

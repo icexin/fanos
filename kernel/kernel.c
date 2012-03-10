@@ -40,7 +40,7 @@ void init_tss()
 	int i;
 	for(i=0; i<2; i++)
 	{
-		tss[i].esp0 = 0x100000 + 0x4000;
+		tss[i].esp0 = (u32)(tss[i].stack + 1024 * 4 - 1);
 		tss[i].ss0 = 0x10;
 		tss[i].eflags = 0x200;
 		tss[i].esp = 0x100000 + 0x100000;
@@ -52,10 +52,8 @@ void init_tss()
 		tss[i].gs = 0x17;
 	}
 
-	tss[0].esp0 = 0x100000 + 0x100000;
-	tss[1].esp0 = 0x100000 + 0x200000;
-	tss[0].eip = taska;
-	tss[1].eip = taskb;
+	tss[0].eip = (u32)taska;
+	tss[1].eip = (u32)taskb;
 	tss[0].ldt = 0x18;
 	tss[1].ldt = 0x20;
 }
@@ -178,6 +176,6 @@ void init_idt()
 void init_timer()
 {
 	out_byte(0x43, 0x36); //控制字：通道0工作在方式3，计数初值采用二进制
-	out_byte(0x40, CLK_8253 / 1000 & 0xFF ); //100hz
-	out_byte(0x40, (CLK_8253 / 1000 >> 8 ) & 0xFF);
+	out_byte(0x40, CLK_8253 / 100 & 0xFF ); //100hz
+	out_byte(0x40, (CLK_8253 / 100 >> 8 ) & 0xFF);
 }
