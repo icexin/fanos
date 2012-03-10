@@ -24,13 +24,13 @@ run:mount kernel
 debug:mount kernel
 	sudo cp kernel.bin osimg/kernel.bin 
 	sudo strip --strip-debug osimg/kernel.bin && sync
-	bochs -q   -f script/bochsrc_dbg&
+	bochs -q   -f script/bochsrc_dbg 2> /dev/null &
 	gdb
 local:mount kernel
 	sudo cp kernel.bin osimg/kernel.bin 
 	sudo strip --strip-debug osimg/kernel.bin && sync
 	bochs_local -q   -f script/bochsrc
-kernel/global.o:include/global.h
+kernel/global.o:include/global.h include/kernel.h
 
 
 
