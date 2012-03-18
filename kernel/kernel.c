@@ -15,10 +15,10 @@ void init_gdt()
 	init_gdt_desc(0, 0, 0, 0); //空段
 	init_gdt_desc(1, 0, 0xFFFFF, DA_CR | DA_32 | DA_LIMIT_4K); //代码段
 	init_gdt_desc(2, 0, 0xFFFFF, DA_DRW | DA_32 | DA_LIMIT_4K); //数据段
-	init_gdt_desc(3, (u32)(ldt + 0), sizeof(DESCRIPTOR)* 4, DA_LDT);
-	init_gdt_desc(4, (u32)(ldt + 1), sizeof(DESCRIPTOR)* 4, DA_LDT);
-	init_gdt_desc(5, (u32)(tss + 0), sizeof(TSS), DA_386TSS);
-	init_gdt_desc(6, (u32)(tss + 1), sizeof(TSS), DA_386TSS);
+	init_gdt_desc(3, (u32)(tss + 0), sizeof(TSS), DA_386TSS);
+	init_gdt_desc(4, (u32)(ldt + 0), sizeof(DESCRIPTOR)* 4, DA_LDT);
+	init_gdt_desc(5, (u32)(tss + 1), sizeof(TSS), DA_386TSS);
+	init_gdt_desc(6, (u32)(ldt + 1), sizeof(DESCRIPTOR)* 4, DA_LDT);
 
 	init_ldt();
 	init_tss();
