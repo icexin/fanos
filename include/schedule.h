@@ -3,11 +3,22 @@
 #include <type.h>
 
 typedef int (*fn_ptr)();
-#define TASK_SIZE 2
+#define TASK_SIZE 10
 #define FIRST_TSS 3
 #define FIRST_LDT (FIRST_TSS + 1)
 #define _TSS(n) (((unsigned long)n) * 0x10 + (FIRST_TSS << 3)) //第n个tss的选择符
 #define _LDT(n) (((unsigned long)n) * 0x10 + (FIRST_LDT << 3)) //第n个ldt的选择符
+
+#define move_to(n) { \
+struct{long a,b;}__tmp; \
+__asm__("#cmpl %%ecx, current_task\n\t" \
+	"#je 1f\n\t" \
+	"movw %%dx, %1\n\t" \
+	"ljmp %0\n\t" \
+	"1:nop\n\t" \
+	::"m"(*&__tmp.a),"m"(*&__tmp.b), \
+	"d"(_TSS(n)),"c"(n)); \
+}
 struct tss_t
 {
 	u32 backlink;
@@ -48,5 +59,5 @@ struct task_t
 
 void init_sched();
 int  create_task(int task_no, fn_ptr task_fn);
-
+void schedule();
 #endif

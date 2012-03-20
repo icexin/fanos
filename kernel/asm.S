@@ -5,10 +5,7 @@
 .global move_to_user
 
 .extern handle
-.extern putchar
-.extern taska
-.extern taskb
-.extern choice
+.extern do_timer
 .text
 keyboard:
 	call handle
@@ -17,31 +14,24 @@ keyboard:
 	iret
 timer:
 	push %ds
+	push %es
+	push %fs
 	push %eax
 	push %ebx
+	push %ecx
+	push %edx
 
 	mov $0x20, %al
 	out %al, $0x20
+	call do_timer
 
-	mov $0x10, %ax
-	mov %ax, %ds
-	mov choice, %eax
-	lea choice, %ebx
-	test %eax, %eax
-	jz 1f
-	#none zero jump to taskb
-	movl $0, (%ebx)
-	ljmp $0x28, $0
-	jmp 2f
-
-1:
-	movl $1, (%ebx)
-	ljmp $0x18, $0
-2:
+	pop %edx
+	pop %ecx
 	pop %ebx
 	pop %eax
+	pop %fs
+	pop %es
 	pop %ds
-
 	iret
 enable_int:
 	sti
