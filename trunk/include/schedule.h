@@ -1,12 +1,14 @@
 #ifndef _SHCHEDULE_H
 #define _SHCHEDULE_H
+#include <type.h>
 
-
-#define FIRST_TSS 4
+typedef int (*fn_ptr)();
+#define TASK_SIZE 2
+#define FIRST_TSS 3
 #define FIRST_LDT (FIRST_TSS + 1)
-#define _TSS(n) (((unsigned long)n) * 0x10 + (FIRST_TSS << 3))
-#define _LDT(n) (((unsigned long)n) * 0x10 + (FIRST_LDT << 3))
-typedef struct _tss
+#define _TSS(n) (((unsigned long)n) * 0x10 + (FIRST_TSS << 3)) //第n个tss的选择符
+#define _LDT(n) (((unsigned long)n) * 0x10 + (FIRST_LDT << 3)) //第n个ldt的选择符
+struct tss_t
 {
 	u32 backlink;
 	u32 esp0;
@@ -35,8 +37,16 @@ typedef struct _tss
 	u32 ldt;
 	u16 trap;
 	u16 iobase;
-	char stack[1024 * 4];
-}tss_struct;
+}__attribute__((packed));
 
+struct task_t
+{
+	struct tss_t tss;
+	char stack[1024 * 4];
+};
+
+
+void init_sched();
+int  create_task(int task_no, fn_ptr task_fn);
 
 #endif

@@ -34,7 +34,7 @@ kernel/global.o:include/global.h include/kernel.h
 
 
 
-kernel.bin:init/main.o kernel/kernel.o kernel/head.o kernel/global.o kernel/asm.o lib/string.o kernel/tty.o kernel/keyboard.o
+kernel.bin:init/main.o kernel/system.o kernel/head.o kernel/asm.o lib/string.o kernel/tty.o kernel/keyboard.o kernel/sys_call.o kernel/schedule.o kernel/trap.o
 	ld -T script/linker.ld $^ -o$@
 clean:umount
 	rm -f kernel.bin

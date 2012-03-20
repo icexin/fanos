@@ -1,12 +1,7 @@
 
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-                            type.h
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-                                                    Forrest Yu, 2005
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-#ifndef	_ORANGES_TYPE_H_
-#define	_ORANGES_TYPE_H_
+#ifndef	_TYPE_H_
+#define	_TYPE_H_
 
 
 typedef unsigned long long  u64;
@@ -17,4 +12,4 @@ typedef	unsigned char		u8;
 typedef	void	(*int_handler)	();
 
 
-#endif /* _ORANGES_TYPE_H_ */
+#endif 
