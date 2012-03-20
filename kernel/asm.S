@@ -31,12 +31,12 @@ timer:
 	jz 1f
 	#none zero jump to taskb
 	movl $0, (%ebx)
-	ljmp $0x30, $0
+	ljmp $0x28, $0
 	jmp 2f
 
 1:
 	movl $1, (%ebx)
-	ljmp $0x28, $0
+	ljmp $0x18, $0
 2:
 	pop %ebx
 	pop %eax
@@ -53,9 +53,9 @@ move_to_user:
 	pushfl
 	andl $0xFFFFbFFF, (%esp)
 	popfl
-	movl $0x28, %eax
-	ltr %ax
 	movl $0x18, %eax
+	ltr %ax
+	movl $0x20, %eax
 	lldt %ax
 	sti
 	mov $0x17, %ax

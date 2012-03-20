@@ -10,7 +10,7 @@ void handle()
 	printf("%x,", ch);
 }
 
-void taska()
+int taska()
 {
 	while(1)
 	{
@@ -18,7 +18,7 @@ void taska()
 	}
 }
 
-void taskb()
+int taskb()
 {
 	while(1)
 	{

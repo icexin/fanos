@@ -5,6 +5,11 @@ static char* const videoram = (char *const)0xB8000;
 static unsigned char pos_row = 0;
 static unsigned char pos_col = 0;
 
+int sys_write(int fd, char *buf, int len)
+{
+	return tty_write(buf, len);
+}
+
 int tty_write(char *str, int len)
 {
 	int i;
@@ -44,17 +49,16 @@ char* number(char *str, int num, int base)
 	int i; 
 	char *p = str;
 	const char *digits="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	if(num < 0)
-	{
+	if(num < 0){
 		*str++ = '-';
 		num = -num;
 	}
-	for(i=0; num; num/=base)
-	{
+	if(num == 0)
+		*str++ = '0';
+	for(i=0; num; num/=base){
 		tmp[i++] = num % base;
 	}
-	while(i--)
-	{
+	while(i--){
 		*str++ = digits[tmp[i]];
 	}
 	*str = 0;
