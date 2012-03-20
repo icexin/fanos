@@ -42,7 +42,7 @@ void init_idt()
 	
 	init_8259A();
 	//8259a主芯片的中断mask
-	out_byte(INT_M_CTLMASK,	0xFE);
+	out_byte(INT_M_CTLMASK,	0xFC);
 	//8259a从芯片的中断mask
 	out_byte(INT_S_CTLMASK,	0xFF);
 

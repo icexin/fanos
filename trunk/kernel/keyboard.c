@@ -26,6 +26,14 @@ int taskb()
 	}
 }
 
+int taskc()
+{
+	while(1)
+	{
+		putchar('c');
+	}
+}
+
 void handle_timer()
 {
 	if(choice == 0)

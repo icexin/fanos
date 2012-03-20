@@ -1,12 +1,14 @@
 #include <schedule.h>
 #include <system.h>
 
-int taska();
-int taskb();
+extern int taska();
+extern int taskb();
+extern int taskc();
+extern struct desc gdt[];
 
+int current_task;
 struct task_t task_struct[TASK_SIZE];
 struct desc ldt[TASK_SIZE * 3];
-extern struct desc gdt[];
 
 static void create_task_tss(int task_no, fn_ptr task_fn)
 {
@@ -43,8 +45,10 @@ static void create_task_ldt(int task_no)
 
 void init_sched()
 {
+	current_task = 0;
 	create_task(0, taska);
 	create_task(1, taskb);
+	create_task(2, taskc);
 }
 
 
@@ -55,4 +59,17 @@ int create_task(int task_no, fn_ptr task)
 	create_task_tss(task_no, task);
 	create_task_ldt(task_no);
 	return 1;
+}
+
+void do_timer()
+{
+	schedule();
+}
+
+void schedule()
+{
+	int next;
+	next = (current_task + 1) % 3;
+	current_task = next;
+	move_to(next);
 }
