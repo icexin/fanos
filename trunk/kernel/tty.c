@@ -5,10 +5,11 @@
 static char* const videoram = (char *const)0xB8000;
 static unsigned char pos_row = 0;
 static unsigned char pos_col = 0;
+extern int rs_write(char *buf, int len);
 
 int sys_write(int fd, char *buf, int len)
 {
-	return tty_write(buf, len);
+	return rs_write(buf, len);
 }
 
 
