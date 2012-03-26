@@ -30,11 +30,12 @@ local:mount kernel
 	sudo cp kernel.bin osimg/kernel.bin 
 	sudo strip --strip-debug osimg/kernel.bin && sync
 	bochs_local -q   -f script/bochsrc
-kernel/global.o:include/global.h include/kernel.h
 
+vmlinux26.bin:kernel.bin
+	objcopy -O binary $^ $@
+	cp $@ /var/www/weblinux/ -f
 
-
-kernel.bin:init/main.o kernel/system.o kernel/head.o kernel/asm.o lib/string.o kernel/tty.o kernel/keyboard.o kernel/sys_call.o kernel/schedule.o kernel/trap.o
+kernel.bin:init/main.o kernel/system.o kernel/head.o kernel/asm.o lib/string.o kernel/tty.o kernel/keyboard.o kernel/sys_call.o kernel/schedule.o kernel/trap.o kernel/serial.o
 	ld -T script/linker.ld $^ -o$@
 clean:umount
 	rm -f kernel.bin

@@ -8,11 +8,33 @@
 .extern do_timer
 .text
 keyboard:
+	cli
+	push %eax
+	push %ebx
+	push %ecx
+	push %edx
+	push %esi
+	push %edi
+
+	push %ds
+	mov $0x10, %eax
+	mov %ax, %ds
+
 	call handle
 	mov $0x20, %al
 	out %al, $0x20
+
+	pop %ds
+	pop %edi
+	pop %esi
+	pop %edx
+	pop %ecx
+	pop %ebx
+	pop %eax
+	sti
 	iret
 timer:
+	cli
 	push %ds
 	push %es
 	push %fs
@@ -20,6 +42,9 @@ timer:
 	push %ebx
 	push %ecx
 	push %edx
+
+	mov $0x10, %eax
+	mov %ax, %ds
 
 	mov $0x20, %al
 	out %al, $0x20
@@ -32,6 +57,7 @@ timer:
 	pop %fs
 	pop %es
 	pop %ds
+	sti
 	iret
 enable_int:
 	sti
