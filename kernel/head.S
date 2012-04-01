@@ -1,5 +1,5 @@
 .global loader
-.extern kmain
+.extern main
 
 .set ALIGN, 1<<0
 .set MEMINFO, 1<<1

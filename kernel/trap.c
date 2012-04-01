@@ -11,7 +11,7 @@
 
 
 extern struct gate idt[];
-extern u8		idt_ptr[];
+extern u8   idt_ptr[];
 extern void keyboard();
 extern void timer();
 extern void sys_call();
