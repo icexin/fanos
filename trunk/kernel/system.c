@@ -61,8 +61,7 @@ void create_idt_desc(struct gate *p_gate, u8 desc_type,
 
 u8 in_byte(u16 port)
 {
-	__asm__(
-	"mov %0, %%dx\n\t"
+	__asm__ __volatile__(
 	"xor %%eax, %%eax \n\t"
 	"in %%dx, %%al\n\t"
 	"nop\n\t"
@@ -70,19 +69,18 @@ u8 in_byte(u16 port)
 	"nop\n\t"
 	"nop\n\t"
 	"nop\n\t"
-	"nop\n\t"::"r"(port):"eax","edx");
+	"nop\n\t"::"d"(port):"eax");
 }
 
 void out_byte(u16 port, u8 out_data)
 {
-	__asm__(
-	"mov %0, %%dx\n\t"
-	"out %1, %%dx\n\t"
+	__asm__ __volatile__(
+	"out %%al, %%dx\n\t"
 	"nop\n\t"
 	"nop\n\t"
 	"nop\n\t"
 	"nop\n\t"
-	"nop\n\t"::"r"(port),"a"(out_data):"edx");
+	"nop\n\t"::"d"(port),"a"(out_data));
 }
 
 

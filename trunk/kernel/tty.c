@@ -9,7 +9,11 @@ extern int rs_write(char *buf, int len);
 
 int sys_write(int fd, char *buf, int len)
 {
-	return rs_write(buf, len);
+	if(fd == 1)
+		return rs_write(buf, len);
+	else
+		return tty_write(buf, len);
+	
 }
 
 
@@ -128,6 +132,16 @@ int sprintf(char *str, const char *fmt, ...)
 	return vsprintf(str, fmt, ap);
 }
 
+int fprintf(int fd, const char *fmt, ...)
+{
+	char tmp[256];
+	int n;
+	var_list ap = (var_list)((char*)&fmt + 4);
+	n = vsprintf(tmp, fmt, ap);
+	write(fd, tmp, n);
+	return n;
+}
+	
 int printf(const char *fmt, ...)
 {
 	char tmp[256];

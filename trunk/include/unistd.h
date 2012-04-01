@@ -1,11 +1,8 @@
 #ifndef _UNISTD_H
 #define _UNISTD_H
 
-inline int write(int fd, char *buf, int len)
-{
-	__asm__ __volatile__("mov $0, %%eax;int $0x80"
-		::"b"(fd),"c"(buf),"d"(len)
-	);
-}
+#define STDIN_FILENO 0
+#define STDOUT_FILENO 1
+#define STDERR_FILENO 2
 
 #endif
