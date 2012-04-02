@@ -73,8 +73,8 @@ void create_idt_desc(struct gate *p_gate, u8 desc_type, int_handler handler, uns
 void out_byte(u16 port, u8 out_data);
 u8 in_byte(u16 port);
 
-void out_word(u16 port u16 data);
-u16 in_byte(u16 port);
+void out_word(u16 port, u16 data);
+u16 in_word(u16 port);
 
 
 #endif

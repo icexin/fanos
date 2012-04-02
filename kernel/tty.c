@@ -51,16 +51,18 @@ int tty_write(char *str, int len)
 }
 
 
-char* number(char *str, int num, int base)
+char* number(char *str, unsigned int num, int base)
 {
 	int tmp[36];
 	int i; 
 	char *p = str;
 	const char *digits="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	if(num < 0){
+	int n = 0;
+	if(base == 10 && (int)num < 0){
 		*str++ = '-';
-		num = -num;
+		num = (unsigned int)(-(int)num);
 	}
+		
 	if(num == 0)
 		*str++ = '0';
 	for(i=0; num; num/=base){
@@ -108,13 +110,13 @@ int vsprintf(char *str, const char *fmt, var_list args)
 				args += 4;
 				break;
 			case 'd':
-				number(tmp, *(int *)args, 10);
+				number(tmp, *(unsigned int *)args, 10);
 				strcpy(str, tmp);
 				str += strlen(tmp);
 				args += 4;
 				break;
 			case 'x':
-				number(tmp, *(int *)args, 16);
+				number(tmp, *(unsigned int *)args, 16);
 				strcpy(str, tmp);
 				str += strlen(tmp);
 				args += 4;
