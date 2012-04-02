@@ -1,6 +1,7 @@
 #include <tty.h>
 #include <string.h>
 #include <unistd.h>
+#include <system.h>
 
 static char* const videoram = (char *const)0xB8000;
 static unsigned char pos_row = 0;
@@ -38,14 +39,14 @@ int tty_write(char *str, int len)
 	{
 		pos_row = 0;
 	}
-	disable_int();
+	cli();
 	out_byte(0x3D4, 0x0E);
 	out_byte(0x3D5, (pos_row * 80 + pos_col) >> 8);
 
 	out_byte(0x3D4, 0x0F);
 	out_byte(0x3D5, (pos_row * 80 + pos_col) & 0xFF);
 
-	enable_int();
+	sti();
 
 }
 
@@ -74,13 +75,11 @@ char* number(char *str, int num, int base)
 
 void init_tty()
 {
-	disable_int();
 	out_byte(0x3D4, 0xC);
 	out_byte(0x3D5, 0);
 
 	out_byte(0x3D4, 0xD);
 	out_byte(0x3D5, 0);
-	enable_int();
 }
 
 int vsprintf(char *str, const char *fmt, var_list args)

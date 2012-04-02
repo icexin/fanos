@@ -1,23 +1,24 @@
 #include <schedule.h>
 #include <system.h>
+#include <mem.h>
 
 extern int taska();
 extern int taskb();
 extern int taskc();
 extern struct desc gdt[];
 
-int current_task;
-struct task_t task_struct[TASK_SIZE];
+struct task_t *current_task;
+struct task_t *task_struct[TASK_SIZE];
 struct desc ldt[TASK_SIZE * 3];
 
 static void create_task_tss(int task_no, fn_ptr task_fn)
 {
-	struct tss_t *tss = &(task_struct[task_no].tss);
+	struct tss_t *tss = &(task_struct[task_no]->tss);
 
-	tss->esp0 = (u32)(task_struct[task_no].stack + 1024 * 4 - 1);
+	tss->esp0 = (int)(task_struct[task_no]) + PAGE_SIZE;
 	tss->ss0 = 0x10;
 	tss->eflags = 0x200;
-	tss->esp = 0x200000 + 0x100000 * (task_no + 1); //1M-2M为内核内存，从2M开始为任务内存，每个任务1M空间
+	tss->esp = get_free_page() + PAGE_SIZE;
 	tss->es = 0x17;
 	tss->cs = 0x0F;
 	tss->ss = 0x17;
@@ -28,7 +29,7 @@ static void create_task_tss(int task_no, fn_ptr task_fn)
 	tss->ldt = _LDT(task_no);
 	
 	/*加入gdt*/
-	create_gdt_desc(gdt + FIRST_TSS + task_no * 2, (u32)(task_struct + task_no), sizeof(struct task_t) - 1, DA_386TSS);
+	create_gdt_desc(gdt + FIRST_TSS + task_no * 2, (u32)(tss), sizeof(struct task_t) - 1, DA_386TSS);
 }
 
 static void create_task_ldt(int task_no)
@@ -45,10 +46,10 @@ static void create_task_ldt(int task_no)
 
 void init_sched()
 {
-	current_task = 0;
 	create_task(0, taska);
 	create_task(1, taskb);
 	create_task(2, taskc);
+	current_task = task_struct[0];
 }
 
 
@@ -56,8 +57,12 @@ int create_task(int task_no, fn_ptr task)
 {
 	if(task_no > TASK_SIZE)
 		return 0;
+	struct task_t *t = get_free_page();
+	t->taskno = task_no;
+	task_struct[task_no] = t;
 	create_task_tss(task_no, task);
 	create_task_ldt(task_no);
+
 	return 1;
 }
 
@@ -69,7 +74,9 @@ void do_timer()
 void schedule()
 {
 	int next;
-	next = (current_task + 1) % 3;
-	current_task = next;
+	char* const video = (char *const)0xB8000;
+	next = (current_task->taskno + 1) % 3;
+	printf("current=%x pid=%d\n", current_task, current_task->taskno);
+	printf("next=%x pid=%d\n", task_struct[next], next);
 	move_to(next);
 }

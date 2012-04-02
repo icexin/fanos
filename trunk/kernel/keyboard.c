@@ -11,19 +11,17 @@ void delay(int n)
 
 void handle()
 {
-	char ch = '#';
 	in_byte(0x60);
 	int i;
 	for(i=0; i<50; i++)
-		rs_write(&ch, 1);
+		printf("#");
 }
 
 int taska()
 {
 	while(1)
 	{
-		putchar('a');
-		delay(100);
+		__asm__ __volatile__("mov $0, %eax");
 	}
 }
 
@@ -31,8 +29,7 @@ int taskb()
 {
 	while(1)
 	{
-		putchar('b');
-		delay(100);
+		__asm__ __volatile__("mov $1, %eax");
 	}
 }
 
@@ -40,23 +37,7 @@ int taskc()
 {
 	while(1)
 	{
-		putchar('c');
-		delay(100);
+		__asm__ __volatile__("mov $2, %eax");
 	}
 }
 
-void handle_timer()
-{
-	if(choice == 0)
-	{
-		choice = !choice;
-		__asm__("ljmp $0x28, $0");
-	}
-	else
-	{
-		choice = !choice;
-		__asm__("ljmp $0x30, $0");
-	}
-
-	
-}
