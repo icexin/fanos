@@ -10,6 +10,7 @@ extern struct desc gdt[];
 struct task_t *current_task;
 struct task_t *task_struct[TASK_SIZE];
 struct desc ldt[TASK_SIZE * 3];
+unsigned long ticks; /*系统嘀嗒数*/
 
 static void create_task_tss(int task_no, fn_ptr task_fn)
 {
@@ -66,17 +67,19 @@ int create_task(int task_no, fn_ptr task)
 	return 1;
 }
 
-void do_timer()
+void do_timer(int cpl)
 {
+	if(!cpl)return;
 	schedule();
 }
+
 
 void schedule()
 {
 	int next;
 	char* const video = (char *const)0xB8000;
 	next = (current_task->taskno + 1) % 3;
-	printf("current=%x pid=%d\n", current_task, current_task->taskno);
-	printf("next=%x pid=%d\n", task_struct[next], next);
-	move_to(next);
+//	printf("current=%x pid=%d\n", current_task, current_task->taskno);
+//	printf("next=%x pid=%d\n", task_struct[next], next);
+	switch_to(next);
 }

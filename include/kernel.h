@@ -13,5 +13,6 @@ if(!(exp)){ \
 }while(0)
 
 void panic(char *str);
+int log(const char *fmt, ...);
 
 #endif
