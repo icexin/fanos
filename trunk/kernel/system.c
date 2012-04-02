@@ -83,11 +83,11 @@ void out_byte(u16 port, u8 out_data)
 	"nop\n\t"::"d"(port),"a"(out_data));
 }
 
-short in_word(u16 port)
+u16 in_word(u16 port)
 {
 	__asm__ __volatile__(
-	"xor %eax, %eax\n\t"
-	"inw %dx, %ax"
+	"xor %%eax, %%eax\n\t"
+	"inw %%dx, %%ax\n\t"
 	"nop\n\t"
 	"nop\n\t"
 	"nop\n\t"
@@ -99,7 +99,7 @@ short in_word(u16 port)
 void out_word(u16 port, u16 data)
 {
 	__asm__ __volatile__(
-	"outw %ax, %dx"
+	"outw %%ax, %%dx\n\t"
 	"nop\n\t"
 	"nop\n\t"
 	"nop\n\t"

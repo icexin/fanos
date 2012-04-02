@@ -23,7 +23,6 @@ int taska()
 	while(1)
 	{
 		__asm__ __volatile__("mov $0, %eax");
-		printf("ticks:%d\n", get_ticks());
 	}
 }
 
