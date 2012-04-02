@@ -2,8 +2,9 @@
 #define _SYS_H
 #include <schedule.h>
 
-extern sys_write(int fd, char *buf, int len);
+extern void sys_write();
+extern void sys_ticks();
 
 
-fn_ptr sys_call_table[]={sys_write};
+fn_ptr sys_call_table[]={sys_write, sys_ticks};
 #endif

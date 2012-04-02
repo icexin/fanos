@@ -133,7 +133,7 @@ int sprintf(char *str, const char *fmt, ...)
 
 int fprintf(int fd, const char *fmt, ...)
 {
-	char tmp[256];
+	static char tmp[256];
 	int n;
 	var_list ap = (var_list)((char*)&fmt + 4);
 	n = vsprintf(tmp, fmt, ap);
@@ -143,7 +143,7 @@ int fprintf(int fd, const char *fmt, ...)
 	
 int printf(const char *fmt, ...)
 {
-	char tmp[256];
+	static char tmp[256];
 	int n;
 	var_list ap = (var_list)((char*)&fmt + 4);
 	n = vsprintf(tmp, fmt, ap);

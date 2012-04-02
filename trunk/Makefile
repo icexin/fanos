@@ -13,7 +13,7 @@ mount:
 		mkdir -p /tmp/tmpfs&& \
 		sudo mount tmpfs /tmp/tmpfs -t tmpfs&&\
 		cp images/hd.img /tmp/tmpfs/hd.img&&\
-		sudo mount  -o loop,offset=32256 images/hd.img osimg \
+		sudo mount  -o loop,offset=32256 /tmp/tmpfs/hd.img osimg \
 	;fi 
 umount:
 	if grep 'osimg' /etc/mtab; then \

@@ -13,7 +13,6 @@
 .text
 keyboard:
 
-	movb $'1', (0xB8002)
 	push %eax
 	push %ebx
 	push %ecx
@@ -35,10 +34,8 @@ keyboard:
 	pop %ecx
 	pop %ebx
 	pop %eax
-	movb $'0', (0xB8002)
 	iret
 timer:
-	movb $'1', (0xB8000)
 	push %ds
 	push %es
 	push %fs
@@ -50,10 +47,17 @@ timer:
 	mov $0x10, %eax
 	mov %ax, %ds
 
+	incl ticks #系统嘀嗒
+
 	mov $0x20, %al
 	out %al, $0x20
 
+#取cpl
+	mov 32(%esp), %eax
+	andl $3, %eax
+	push %eax
 	call do_timer
+	add $4, %esp
 
 	pop %edx
 	pop %ecx
@@ -74,7 +78,6 @@ move_to_user:
 	lldt %ax
 	mov $0x17, %ax
 	mov %ax, %ds
-
 	sti
 	pushl $0x17
 	pushl $0x202000 

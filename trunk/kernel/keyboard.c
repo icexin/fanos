@@ -1,6 +1,7 @@
 #include <tty.h>
+#include <time.h>
+
 unsigned char keymap;
-int choice = 1;
 
 void delay(int n)
 {
@@ -22,6 +23,7 @@ int taska()
 	while(1)
 	{
 		__asm__ __volatile__("mov $0, %eax");
+		printf("ticks:%d\n", get_ticks());
 	}
 }
 

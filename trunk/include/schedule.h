@@ -47,7 +47,7 @@ typedef int (*fn_ptr)();
 #define _TSS(n) (((unsigned long)n) * 0x10 + (FIRST_TSS << 3)) //第n个tss的选择符
 #define _LDT(n) (((unsigned long)n) * 0x10 + (FIRST_LDT << 3)) //第n个ldt的选择符
 
-#define move_to(n) { \
+#define switch_to(n) { \
 struct{long a,b;}__tmp; \
 __asm__("cmpl %%ecx, current_task\n\t" \
 	"je 1f\n\t" \
