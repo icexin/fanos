@@ -27,7 +27,7 @@ sys_call:
 	mov $0x17, %edx
 	mov %dx, %fs
 
-	call sys_call_table(,%eax,4)
+	call *sys_call_table(,%eax,4)
 	add $12, %esp #恢复参数栈
 
 	pop %fs

@@ -24,7 +24,14 @@ void init_gdt()
 
 	*gdt_ptr_limit = GDT_SIZE;
 	*gdt_ptr_base = (u32*)gdt;
-	__asm__ __volatile__("lgdt gdt_ptr\n\t");
+	__asm__ __volatile__("lgdt gdt_ptr\n\t"
+						 "mov $0x10, %%eax\n\t"
+						 "mov %%ax, %%ds\n\t"
+						 "mov %%ax, %%es\n\t"
+						 "mov %%ax, %%fs\n\t"
+						 "ljmp $0x08,$1f\n\t1:\n\t"
+						 :::"eax"
+	);
 
 }
 
