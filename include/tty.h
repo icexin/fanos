@@ -1,6 +1,7 @@
 #ifndef _TTY_H
 #define _TTY_H
 
+extern char* const videoram;
 typedef char* var_list;
 
 void putchar(char ch);

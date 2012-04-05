@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <system.h>
 
-static char* const videoram = (char *const)0xB8000;
+char* const videoram = (char *const)0xB8000;
 static unsigned char pos_row = 0;
 static unsigned char pos_col = 0;
 extern int rs_write(char *buf, int len);

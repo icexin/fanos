@@ -2,7 +2,7 @@ CC=gcc
 ASM=nasm
 CFLAGS:=-nostdlib -nostdinc -fno-builtin -fno-stack-protector -g -Iinclude
 
-.PHONY:all kernel begin mount umount init kern lib
+.PHONY:all kernel begin mount serial umount init kern lib
 all: kernel
 
 kernel:kernel.bin
@@ -21,17 +21,19 @@ umount:
 		sudo umount /tmp/tmpfs;\
 	fi
 
+serial:
+	if [ ! -e "serial" ]; then mkfifo serial; fi
 
-begin:mount kernel
+begin:mount serial kernel
 	sudo cp kernel.bin osimg/kernel.bin 
 	sudo strip --strip-debug osimg/kernel.bin &&sync
 	bochs -q   -f script/bochsrc
-debug:mount kernel
+debug:mount serial kernel
 	sudo cp kernel.bin osimg/kernel.bin
 	sudo strip --strip-debug osimg/kernel.bin && sync
 	bochs -q   -f script/bochsrc_dbg 2> /dev/null &
 	gdb
-local:mount kernel
+local:mount serial kernel
 	sudo cp kernel.bin osimg/kernel.bin
 	sudo strip --strip-debug osimg/kernel.bin && sync
 	bochs_local -q   -f script/bochsrc
