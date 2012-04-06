@@ -12,10 +12,9 @@ void delay(int n)
 
 void handle()
 {
+	static int i=0;
 	in_byte(0x60);
-	int i;
-	for(i=0; i<50; i++)
-		printf("#");
+	log("%d,", i++);
 }
 
 int taska()

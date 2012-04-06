@@ -74,8 +74,6 @@ u8 in_byte(u16 port)
 	"nop\n\t"
 	"nop\n\t"
 	"nop\n\t"
-	"nop\n\t"
-	"nop\n\t"
 	"nop\n\t"::"d"(port):"eax");
 }
 
@@ -83,8 +81,6 @@ void out_byte(u16 port, u8 out_data)
 {
 	__asm__ __volatile__(
 	"out %%al, %%dx\n\t"
-	"nop\n\t"
-	"nop\n\t"
 	"nop\n\t"
 	"nop\n\t"
 	"nop\n\t"::"d"(port),"a"(out_data));
@@ -95,7 +91,6 @@ u16 in_word(u16 port)
 	__asm__ __volatile__(
 	"xor %%eax, %%eax\n\t"
 	"inw %%dx, %%ax\n\t"
-	"nop\n\t"
 	"nop\n\t"
 	"nop\n\t"
 	"nop\n\t"::"d"(port));
@@ -109,9 +104,19 @@ void out_word(u16 port, u16 data)
 	"outw %%ax, %%dx\n\t"
 	"nop\n\t"
 	"nop\n\t"
-	"nop\n\t"
 	"nop\n\t"::"a"(data),"d"(port));
 }
 
+void udelay(unsigned long n)
+{
+	if(!n)
+		return;
+	__asm__("1:dec %%eax; jnz 1b"::"a"(n));
+}
 
 
+void mdelay(unsigned long n)
+{
+	while(n--)
+		udelay(1000);
+}

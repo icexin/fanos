@@ -17,19 +17,20 @@ int main(void *mbd, unsigned int magic)
 	init_idt();
 
 	tty_clear();	
+	sti();
 	printf("Kernel begin\n");
 
 	init_sched();
 
 	hd_init();
 	log("hd init\n");
-	if(hd_read(0, hd_buf)){
+/*	if(hd_read(0, hd_buf)){
 		int i;
 		for(i=0; i<512; i++){
 			printf("%x,", (unsigned char)hd_buf[i]);
 		}
 	}
-
+*/
 	move_to_user();
 	return 0;
 }
