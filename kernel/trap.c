@@ -75,7 +75,7 @@ void init_idt()
 	create_idt_desc(idt + 0x21, DA_386IGate, keyboard, PRIVILEGE_KRNL);
 
 	/*系统调用陷阱*/
-	create_idt_desc(idt + 0x80, DA_386IGate, sys_call, PRIVILEGE_USER);
+	create_idt_desc(idt + 0x80, DA_386TGate, sys_call, PRIVILEGE_USER);
 
 	
 

@@ -16,6 +16,9 @@
 #define CMD_READ 0x20
 #define CMD_WRITE 0x30
 
+#define CTL_DISINT 0x02
+#define CTL_RESET  0x04
+
 #define STATUS_BUSY 0x80
 #define STATUS_ERR  0x01
 
@@ -53,10 +56,20 @@ int hd_read(int blk_num, char *buf)
 	return 1;
 }
 
+void hd_reset()
+{
+	out_byte(HD_CTL, CTL_RESET);mdelay(2);
+	int n = 4;
+	while(n--){
+		log("status:%x\n", in_byte(HD_STATUS) & STATUS_BUSY);
+	}
+}
+
 void hd_init()
 {
 	cli();
-	out_byte(HD_CTL, 0x02); //禁止中断，允许复位
+	hd_reset();
+	out_byte(HD_CTL, CTL_DISINT); //禁止中断，允许复位
 	sti();
 }
 	

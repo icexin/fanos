@@ -76,5 +76,7 @@ u8 in_byte(u16 port);
 void out_word(u16 port, u16 data);
 u16 in_word(u16 port);
 
+void udelay(unsigned long n);
+void mdelay(unsigned long n);
 
 #endif
