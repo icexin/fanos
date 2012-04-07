@@ -14,7 +14,7 @@ void handle()
 {
 	static int i=0;
 	in_byte(0x60);
-	log("%d,", i++);
+	printf("%d,", i++);
 }
 
 int taska()
