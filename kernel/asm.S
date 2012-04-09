@@ -68,23 +68,6 @@ timer:
 	pop %ds
 	iret
 
-move_to_user:
-	pushfl
-	andl $0xFFFFbFFF, (%esp)
-	popfl
-	movl $0x18, %eax
-	ltr %ax
-	movl $0x20, %eax
-	lldt %ax
-	mov $0x17, %ax
-	mov %ax, %ds
-	sti
-	pushl $0x17
-	pushl $0x202000 
-	pushfl
-	pushl $0x0F
-	pushl $taska
-	iret
 .equ no_error_code, 0xFFFFFFFF
 divide_error:
 	push no_error_code
@@ -136,7 +119,6 @@ stack_error:
 	push $12
 	call exception_handler
 general_protect:
-	xchg %bx, %bx
 	push $13
 	call exception_handler
 page_error:

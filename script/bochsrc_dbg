@@ -8,5 +8,7 @@ mouse: enabled=0
 cpu: ips=15000000
 vga_update_interval: 150000
 
+com1: enabled=1,mode=file,dev="serial"
+
 #gdb调试
 gdbstub: enabled=1, port=1234, text_base=0,data_base=0,bss_base=0

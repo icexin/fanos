@@ -3,4 +3,6 @@
 char *strcpy(char *dest, char *src);
 int strlen(char *str);
 int isprint(char ch);
+void memcpy(char *dest, const char *src, int len);
+void memset(char *dest, int to_set, int n);
 #endif

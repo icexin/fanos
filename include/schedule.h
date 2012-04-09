@@ -1,6 +1,7 @@
 #ifndef _SHCHEDULE_H
 #define _SHCHEDULE_H
 #include <type.h>
+#include <system.h>
 
 struct tss_t
 {
@@ -36,7 +37,8 @@ struct tss_t
 struct task_t
 {
 	struct tss_t tss;
-	int taskno;
+	struct desc ldt[3];	
+	int pid;
 };
 
 
@@ -60,6 +62,28 @@ __asm__("cmpl %%ecx, current_task\n\t" \
 	"d"(_TSS(n)),"c"(task_struct[n])); \
 }
 
+#define move_to_user() do{ \
+	__asm__( \
+	"pushfl\n\t" \
+	"andl $0xFFFFbFFF, (%%esp)\n\t" \
+	"popfl\n\t" \
+	"movl $0x18, %%eax\n\t" \
+	"ltr %%ax\n\t" \
+	"movl $0x20, %%eax\n\t" \
+	"lldt %%ax\n\t" \
+	"sti \n\t" \
+	"pushl $0x17\n\t" \
+	"pushl $0x202000 \n\t" \
+	"pushfl\n\t" \
+	"pushl $0x0F\n\t" \
+	"pushl $1f\n\t" \
+	"iret\n\t" \
+	"1:mov $0x17, %%ax\n\t" \
+	"mov %%ax, %%ds\n\t" \
+	"2:xchg %%bx, %%bx\n\t" \
+	"jmp 2b\n\t" \
+	:::"eax");\
+}while(0)
 
 void init_sched();
 int  create_task(int task_no, fn_ptr task_fn);
