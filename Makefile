@@ -30,17 +30,14 @@ serial:
 	if [ ! -e "serial" ]; then mkfifo serial; fi
 
 begin:mount serial kernel
-	sudo cp kernel.bin osimg/kernel.bin 
-	sudo strip --strip-debug osimg/kernel.bin &&sync
+	sudo cp kernel.bin osimg/kernel.bin && sync
 	bochs -q   -f script/bochsrc
 debug:mount serial kernel
-	sudo cp kernel.bin osimg/kernel.bin
-	sudo strip --strip-debug osimg/kernel.bin && sync
+	sudo cp kernel.bin osimg/kernel.bin &&sync
 	bochs -q   -f script/bochsrc_dbg 2> /dev/null &
 	gdb
 local:mount serial kernel
-	sudo cp kernel.bin osimg/kernel.bin
-	sudo strip --strip-debug osimg/kernel.bin && sync
+	sudo cp kernel.bin osimg/kernel.bin &&sync
 	bochs_local -q   -f script/bochsrc
 
 vmlinux26.bin:kernel.bin

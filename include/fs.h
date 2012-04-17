@@ -17,12 +17,11 @@ struct inode{
 	char  i_gid;
 	char  i_nlinks;
 	short i_zone[9];
+
+	unsigned int i_num;
 }__attribute__((packed));
 
-struct inode_desc{
-	struct inode inode;
-	int n_inode;
-}__attribute__((packed));
+#define INODE_SIZE 32
 
 struct dir_entry{
 	unsigned short inode;
@@ -30,7 +29,7 @@ struct dir_entry{
 }__attribute__((packed));
 
 struct device{
-	struct super_blk s_blk;
+	struct super_blk sblk;
 };
 
 struct device dev_list[];

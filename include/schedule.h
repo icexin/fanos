@@ -38,12 +38,13 @@ struct task_t
 {
 	struct tss_t tss;
 	struct desc ldt[3];	
+	unsigned long start_addr;
 	int pid;
 };
 
 
 typedef int (*fn_ptr)();
-#define TASK_SIZE 10
+#define NR_TASK 10
 #define FIRST_TSS 3
 #define FIRST_LDT (FIRST_TSS + 1)
 #define _TSS(n) (((unsigned long)n) * 0x10 + (FIRST_TSS << 3)) //第n个tss的选择符
@@ -59,7 +60,7 @@ __asm__("cmpl %%ecx, current_task\n\t" \
 	"ljmp %0\n\t" \
 	"1:\n\t" \
 	::"m"(*&__tmp.a),"m"(*&__tmp.b), \
-	"d"(_TSS(n)),"c"(task_struct[n])); \
+	"d"(_TSS(n)),"c"(task[n])); \
 }
 
 #define move_to_user() do{ \
@@ -77,13 +78,15 @@ __asm__("cmpl %%ecx, current_task\n\t" \
 	"pushfl\n\t" \
 	"pushl $0x0F\n\t" \
 	"pushl $1f\n\t" \
+	"#2:xchg %%bx, %%bx\n\t" \
 	"iret\n\t" \
 	"1:mov $0x17, %%ax\n\t" \
 	"mov %%ax, %%ds\n\t" \
-	"2:xchg %%bx, %%bx\n\t" \
-	"jmp 2b\n\t" \
+	"2:jmp 2b\n\t" \
 	:::"eax");\
 }while(0)
+
+extern struct task_t *task[];
 
 void init_sched();
 int  create_task(int task_no, fn_ptr task_fn);

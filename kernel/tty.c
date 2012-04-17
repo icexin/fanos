@@ -14,7 +14,7 @@ extern int rs_write(char *buf, int len);
 
 int sys_write(int fd, char *buf, int len)
 {
-	if(fd == 8)
+	if(fd == 1)
 		return rs_write(buf, len);
 	else
 		return tty_write(buf, len);
