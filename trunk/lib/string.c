@@ -18,6 +18,21 @@ char * strcpy(char *dest, char *src)
 	return p;
 }
 
+int strcmp(char *s1, char *s2)
+{
+	while(*s1 && *s2){
+		if(*s1 != *s2){
+			break;
+		}else{
+			s1++;
+			s2++;
+		}
+	}
+	return *s1 - *s2;
+}
+
+
+
 int isprint(char ch)
 {
 	return (ch >= '0' && ch <='9') || (ch >='a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z');

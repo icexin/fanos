@@ -17,5 +17,5 @@ SECTIONS{
         *(.bss)
         ebss = .;
     }
-    _end = .;
+    _kend = .;
 }

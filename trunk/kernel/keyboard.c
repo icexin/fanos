@@ -21,7 +21,6 @@ int taska()
 {
 	while(1)
 	{
-		putchar('a');
 		__asm__ __volatile__("mov $0, %eax");
 	}
 }
@@ -30,7 +29,6 @@ int taskb()
 {
 	while(1)
 	{
-		putchar('b');
 		__asm__ __volatile__("mov $1, %eax");
 	}
 }
@@ -39,7 +37,6 @@ int taskc()
 {
 	while(1)
 	{
-		putchar('c');
 		__asm__ __volatile__("mov $2, %eax");
 	}
 }
