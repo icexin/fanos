@@ -62,7 +62,7 @@ struct desc		/* 共 8 个字节 */
 	u8	base_high;		/* Base */
 }__attribute__((packed));
 
-
+extern struct desc gdt[];
 
 void init_gdt();
 void create_gdt_desc(struct desc *d, u32 base, u32 limit, u16 flag);

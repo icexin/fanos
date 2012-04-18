@@ -8,7 +8,7 @@
 #define RAMDEV 0
 
 char *ramfs_start, *ramfs_end;
-char fsbuf[4*1024];
+char fsbuf[10*1024];
 struct device dev_list[NR_DEV];
 struct inode inode_tab[NR_INODE];
 
@@ -60,7 +60,6 @@ struct inode *get_inode(int dev, int n)
 	int i;
 	for(i=0; i<NR_INODE; i++){
 		if(inode_tab[i].i_num == n){
-			printf("Got:tab[%d],n=%d\n", i, n);
 			return inode_tab + i;
 		}
 	}
@@ -75,7 +74,7 @@ struct inode *get_inode(int dev, int n)
 		INODE_SIZE);	
 	inode_tab[i].i_num = n;
 
-	printf("get inode:%d,inode ref:%d\n", n, inode_tab[i].i_nlinks);
+//	printk("get inode:%d,inode ref:%d\n", n, inode_tab[i].i_nlinks);
 	return inode_tab + i;
 }
 
@@ -105,7 +104,6 @@ int fs_read(struct inode *node, char *buf)
 	for(i=0; i<nblk; i++){
 		get_zone(RAMDEV, fsbuf + i*BLK_SIZE, node->i_zone[i]);
 	}
-	printf("size=%d\n", size);
 	memcpy(buf, fsbuf, size);
 	return size;
 }
@@ -124,12 +122,13 @@ int fs_open(char *name)
 	int i;
 	for(i=0; i<nblk; i++){
 		get_blk(RAMDEV, buf + i*BLK_SIZE, iroot->i_zone[i]);
-		printf("zone[%d]=%d\n", i, iroot->i_zone[i]);
+		//printf("zone[%d]=%d\n", i, iroot->i_zone[i]);
 	}
 	
 	ent = (struct dir_entry *)buf;
 
 	for(i=0; i<size/sizeof(ent[0]); i++){
+//		printk("name=%s, inode=%d\n", ent[i].name, ent[i].inode);
 		if(!strcmp(ent[i].name, name)){
 			return get_inode(RAMDEV, ent[i].inode);
 		}

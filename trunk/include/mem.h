@@ -5,7 +5,6 @@
 #define FREE_MEM_START (2*1024*1024) 
 #define FREE_MEM_END   (12*1024*1024) 
 
-#define TASK_SIZE  PAGE_SIZE
 
 
 void *alloc_process_mem();

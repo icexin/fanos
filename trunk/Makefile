@@ -43,6 +43,9 @@ local:mount serial kernel
 vmlinux26.bin:kernel.bin
 	objcopy -O binary $^ $@
 	cp $@ /var/www/weblinux/ -f
+
+dump:
+	objdump -D kernel.bin | less
 init:
 	$(MAKE) -C init
 kern:
@@ -51,6 +54,8 @@ lib:
 	$(MAKE) -C lib
 fs:
 	$(MAKE) -C fs
+apps:
+	$(MAKE) -C apps
 
 kernel.bin:init kern lib fs
 	ld -T script/linker.ld -o$@ init/init.o kernel/kernel_all.o lib/lib.o fs/fs.o
@@ -61,3 +66,4 @@ clean:umount
 	$(MAKE) -C kernel clean
 	$(MAKE) -C lib clean
 	$(MAKE) -C fs clean
+	$(MAKE) -C apps clean

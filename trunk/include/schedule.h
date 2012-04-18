@@ -40,11 +40,14 @@ struct task_t
 	struct desc ldt[3];	
 	unsigned long start_addr;
 	int pid;
+	int ticks;
+	int priority;
 };
 
 
 typedef int (*fn_ptr)();
 #define NR_TASK 10
+#define TASK_SIZE (2<<20)
 #define FIRST_TSS 3
 #define FIRST_LDT (FIRST_TSS + 1)
 #define _TSS(n) (((unsigned long)n) * 0x10 + (FIRST_TSS << 3)) //第n个tss的选择符
@@ -57,6 +60,7 @@ __asm__("cmpl %%ecx, current_task\n\t" \
 	"movl %%ecx, current_task\n\t" \
 	"movw %%dx, %1\n\t" \
 	"movb $'0', (0xB8000)\n\t" \
+	"xchg %%bx, %%bx\n" \
 	"ljmp %0\n\t" \
 	"1:\n\t" \
 	::"m"(*&__tmp.a),"m"(*&__tmp.b), \
@@ -72,9 +76,10 @@ __asm__("cmpl %%ecx, current_task\n\t" \
 	"ltr %%ax\n\t" \
 	"movl $0x20, %%eax\n\t" \
 	"lldt %%ax\n\t" \
+	"mov %%esp, %%eax\n\t" \
 	"sti \n\t" \
 	"pushl $0x17\n\t" \
-	"pushl $0x202000 \n\t" \
+	"pushl %%eax \n\t" \
 	"pushfl\n\t" \
 	"pushl $0x0F\n\t" \
 	"pushl $1f\n\t" \
@@ -82,11 +87,12 @@ __asm__("cmpl %%ecx, current_task\n\t" \
 	"iret\n\t" \
 	"1:mov $0x17, %%ax\n\t" \
 	"mov %%ax, %%ds\n\t" \
-	"2:jmp 2b\n\t" \
+	"#2:jmp 2b\n\t" \
 	:::"eax");\
 }while(0)
 
 extern struct task_t *task[];
+extern struct task_t *current_task;
 
 void init_sched();
 int  create_task(int task_no, fn_ptr task_fn);
