@@ -1,8 +1,8 @@
 CFLAGS:=-nostdlib -nostdinc -fno-builtin -fno-stack-protector -g -I../include
 
-C_SRC:=string.c printf.c read_write.c libc.c
+C_SRC:=hello.c
 
-ASM_SRC:= 
+ASM_SRC:= head.S
 
 OBJ:=$(ASM_SRC:%.S=%.o) $(C_SRC:%.c=%.o) 
 
@@ -10,15 +10,18 @@ OBJ:=$(ASM_SRC:%.S=%.o) $(C_SRC:%.c=%.o)
 .PHONY:all clean
 
 
-all: .depend lib.o
+all: .depend hello
+	cp  hello ../ramfs/
+	sync
 
 -include .depend
 
 .depend:$(C_SRC)
 	gcc $(CFLAGS) -M $^ > $@
 
-lib.o:$(OBJ)
-	gcc $(CFLAGS) -r  -o$@ $^
+
+hello:$(OBJ) ../lib/lib.o
+	ld -o$@ $^ -Ttext=0x1000
 
 clean:
 	rm -f *.o

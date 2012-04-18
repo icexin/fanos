@@ -3,10 +3,9 @@
 #include <string.h>
 #include <kernel.h>
 
-extern struct desc gdt[];
 
 struct task_t *current_task;
-struct task_t *task[TASK_SIZE];
+struct task_t *task[NR_TASK];
 unsigned long ticks; /*系统嘀嗒数*/
 
 static void create_task_tss(struct task_t *t, fn_ptr task_fn);
@@ -22,7 +21,8 @@ static void create_task0()
 	task[0] = task0;
 
 	task0->pid = 0;
-	task0->start_addr = 0x100000;
+	task0->start_addr = 0;
+	task0->ticks = task0->priority = 10;
 	create_task_ldt(task0);
 
 	task0->tss.esp0 = (int)task0 + PAGE_SIZE;
@@ -60,8 +60,8 @@ static void create_task_ldt(struct task_t *t)
 {
 	struct desc *d = t->ldt;
 	create_ldt_desc(d, 0, 0, 0);
-	create_ldt_desc(d + 1, t->start_addr, 0xFF, DA_DPL3 | DA_32 | DA_CR | DA_LIMIT_4K );
-	create_ldt_desc(d + 2, t->start_addr, 0xFF, DA_DPL3 | DA_32 | DA_DRW | DA_LIMIT_4K );
+	create_ldt_desc(d + 1, t->start_addr, 0x1FF, DA_DPL3 | DA_32 | DA_CR | DA_LIMIT_4K );
+	create_ldt_desc(d + 2, t->start_addr, 0x1FF, DA_DPL3 | DA_32 | DA_DRW | DA_LIMIT_4K );
 	
 	/*加入gdt*/
 	create_gdt_desc(gdt + FIRST_LDT + t->pid * 2, (u32)d, sizeof(struct desc) * 3 - 1, DA_LDT);
@@ -98,10 +98,29 @@ void do_timer(int cpl)
 
 void schedule()
 {
-	int next;
-	char* const video = (char *const)0xB8000;
-	next = (current_task->pid + 1) % 3;
-//	printf("current=%x pid=%d\n", current_task, current_task->pid);
-//	printf("next=%x pid=%d\n", task_struct[next], next);
-	switch_to(next);
+	struct task_t *t, *ready;
+	int larger_ticks = 0;
+	int i;
+	
+	for(i=0; i<NR_TASK; i++){
+		if(!task[i])
+			continue;
+		if(task[i]->ticks > larger_ticks){
+			larger_ticks = task[i]->ticks;
+			ready = task[i];
+		}
+	}
+	if(larger_ticks <= 0){
+		for(i = 0; i<NR_TASK; i++){
+			if(!task[i])continue;
+			task[i]->ticks = task[i]->priority;
+			if(task[i]->priority > larger_ticks){
+				larger_ticks = task[i]->priority;
+				ready = task[i];
+			}
+		}
+	}
+	ready->ticks--;
+	printk("next process :%d, ticks:%d\n", ready->pid, ready->ticks);
+	switch_to(ready->pid);
 }

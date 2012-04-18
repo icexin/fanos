@@ -14,5 +14,7 @@ if(!(exp)){ \
 
 void panic(char *str);
 int log(const char *fmt, ...);
+int printk(const char *fmt, ...);
+void hex_dump(char *buf, int len);
 
 #endif

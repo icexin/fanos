@@ -13,6 +13,10 @@ sys_call:
 	push %ds
 	push %es
 	push %fs
+	push %esi
+	push %edi
+	push %ebp
+
 
 #依次把参数压栈,%ebx,%ecx,%edx依次为第1，2，3个参数
 	pushl %edx
@@ -30,6 +34,9 @@ sys_call:
 	call *sys_call_table(,%eax,4)
 	add $12, %esp #恢复参数栈
 
+	pop %ebp
+	pop %edi
+	pop %esi
 	pop %fs
 	pop %es
 	pop %ds

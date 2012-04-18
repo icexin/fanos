@@ -64,7 +64,27 @@ void create_idt_desc(struct gate *p_gate, u8 desc_type,
 	p_gate->offset_high	= (base >> 16) & 0xFFFF;
 }
 
+char get_fs_byte(void *addr)
+{
+	__asm__ __volatile__(
+	"xor %%eax, %%eax\n\t" \
+	"movb %%fs:(%0), %%al;\n\t"::"r"(addr):"eax");
+}
 
+void get_fs_str(char *desc, void *src)
+{
+	__asm__ __volatile__(
+	"movb %%fs:(%%edx), %%al\n\t" \
+	"1:test %%al, %%al\n\t" \
+	"je 2f\n\t" \
+	"mov %%al, (%%ebx)\n\t" \
+	"incl %%ebx\n\t" \
+	"incl %%edx\n\t" \
+	"movb %%fs:(%%edx), %%al\n\t" \
+	"jmp 1b\n\t" \
+	"2:nop\n\t" \
+	::"b"(desc),"d"(src):"eax");
+}
 
 u8 in_byte(u16 port)
 {
@@ -120,3 +140,5 @@ void mdelay(unsigned long n)
 	while(n--)
 		udelay(1000);
 }
+
+

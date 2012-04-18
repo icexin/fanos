@@ -11,6 +11,8 @@ void rs_init();
 char hd_buf[512] = {0};
 extern char _end;
 
+
+
 int main(void *mbd, unsigned int magic)
 {
 	multiboot_info_t *info;
@@ -25,20 +27,25 @@ int main(void *mbd, unsigned int magic)
 	rs_init();
 
 	tty_clear();	
-	printf("Kernel begin\n");
+	printk("Kernel begin\n");
 
 	
 
-	char buf[1024];
-	struct inode *node;
-	node = fs_open("hello");
-	int len;
-	len = fs_read(node, buf);
-	puts(buf);
 
 	init_sched();
 
 	move_to_user();
+	int pid = fork();
+	if(!pid){
+		printf("child\n");
+		exec("hello");		
+
+	}else{
+		printf("father\n");
+	}
+	printf("both\n");
+	while(1);
+
 	return 0;
 }
 
