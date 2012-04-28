@@ -6,11 +6,11 @@
 #include <hd.h>
 #include <multiboot.h>
 #include <fs.h>
+#include <debug.h>
 
 void rs_init();
 char hd_buf[512] = {0};
 extern char _end;
-
 
 
 int main(void *mbd, unsigned int magic)
@@ -25,27 +25,21 @@ int main(void *mbd, unsigned int magic)
 	init_idt();
 	init_mem();
 	rs_init();
+	init_sched();
+	
+	printk("*******************Kernel begin******************\n");
 
 	tty_clear();	
-	printk("Kernel begin\n");
+	init_tty();
 
-	
-
-
-	init_sched();
-
+	out_byte(0x21, in_byte(0x21)&~0x01);
 	move_to_user();
 	int pid = fork();
 	if(!pid){
-		printf("child\n");
-		exec("hello");		
-
-	}else{
-		printf("father\n");
+		printf("start shell\n");
+		exec("shell");		
 	}
-	printf("both\n");
-	while(1);
-
+	for(;;)wait(0);
 	return 0;
 }
 

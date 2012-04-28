@@ -2,8 +2,8 @@ CC=gcc
 ASM=nasm
 CFLAGS:=-nostdlib -nostdinc -fno-builtin -fno-stack-protector -g -Iinclude
 
-.PHONY:all kernel begin mount serial umount init kern lib fs
-all: kernel
+.PHONY:all kernel begin mount serial umount init kern lib fs apps
+all: kernel apps
 
 kernel:kernel.bin
 
@@ -34,7 +34,7 @@ begin:mount serial kernel
 	bochs -q   -f script/bochsrc
 debug:mount serial kernel
 	sudo cp kernel.bin osimg/kernel.bin &&sync
-	bochs -q   -f script/bochsrc_dbg 2> /dev/null &
+	bochs -q   -f script/bochsrc_dbg &
 	gdb
 local:mount serial kernel
 	sudo cp kernel.bin osimg/kernel.bin &&sync

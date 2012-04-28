@@ -1,13 +1,12 @@
 #include <schedule.h>
 #include <mem.h>
-#include <string.h>
-#include <kernel.h>
+#include <string.h> 
+#include <kernel.h> 
 
-
-struct task_t *current_task;
-struct task_t *task[NR_TASK];
-unsigned long ticks; /*系统嘀嗒数*/
-
+int cnt = '0'; 
+struct task_t *current_task; 
+struct task_t *task[NR_TASK]; 
+unsigned long ticks; /*系统嘀嗒数*/ 
 static void create_task_tss(struct task_t *t, fn_ptr task_fn);
 static void create_task_ldt(struct task_t *t);
 
@@ -20,9 +19,12 @@ static void create_task0()
 	/* add to task struct */
 	task[0] = task0;
 
+	task0->ppid = 0;
 	task0->pid = 0;
 	task0->start_addr = 0;
 	task0->ticks = task0->priority = 10;
+	task0->status = RUN;
+	task0->istask = 0;
 	create_task_ldt(task0);
 
 	task0->tss.esp0 = (int)task0 + PAGE_SIZE;
@@ -30,11 +32,13 @@ static void create_task0()
 	tss->cs = 0x0F;
 	tss->ds = 0x17;
 	tss->ss = 0x17;
+	tss->fs = 0x17;
 	tss->eflags = 0x200;
 	tss->ldt = _LDT(0);
 
 	create_gdt_desc(gdt + FIRST_TSS, (u32)(tss), sizeof(struct task_t) - 1, DA_386TSS);
 }
+
 static void create_task_tss(struct task_t *t, fn_ptr task_fn)
 {
 	struct tss_t *tss = &(t->tss);
@@ -43,12 +47,12 @@ static void create_task_tss(struct task_t *t, fn_ptr task_fn)
 	tss->ss0 = 0x10;
 	tss->eflags = 0x200;
 	tss->esp = (int)(get_free_page() + PAGE_SIZE);
-	tss->es = 0x17;
-	tss->cs = 0x0F;
-	tss->ss = 0x17;
-	tss->ds = 0x17;
+	tss->es = 0x10;
+	tss->cs = 0x08;
+	tss->ss = 0x10;
+	tss->ds = 0x10;
 	tss->fs = 0x17;
-	tss->gs = 0x17;
+	tss->gs = 0x10;
 	tss->eip = (u32)task_fn;
 	tss->ldt = _LDT(t->pid);
 	
@@ -75,52 +79,72 @@ void init_sched()
 }
 
 
-int create_task(int pid, fn_ptr taskptr)
+int create_task(fn_ptr taskptr)
 {
-	assert(pid < TASK_SIZE);
-	if(pid > TASK_SIZE)
-		return 0;
+	int pid = find_empty_process();
+
+	assert(pid != -1);
 	struct task_t *t = get_free_page();
+	memset(t, 0, sizeof(*t));
 	t->pid = pid;
+	t->ticks = t->priority = 10;
+	t->istask = 1;
+	t->start_addr = 0;
 	task[pid] = t;
 	create_task_tss(t, taskptr);
 	create_task_ldt(t);
-
 	return 1;
 }
 
 void do_timer(int cpl)
 {
-	if(!cpl)return;
+		
+	if(cpl == 0 && current_task->istask == 0){
+//		printk("Timer:process %d in kernel\n", current_task->pid);
+		return;
+	}
 	schedule();
 }
 
 
 void schedule()
 {
-	struct task_t *t, *ready;
+	struct task_t *t, *ready = task[0];
 	int larger_ticks = 0;
 	int i;
 	
+	cli();
 	for(i=0; i<NR_TASK; i++){
-		if(!task[i])
-			continue;
-		if(task[i]->ticks > larger_ticks){
-			larger_ticks = task[i]->ticks;
-			ready = task[i];
+		t = task[i];
+		if(!t || t == current_task)continue;
+		if(t->ticks > larger_ticks && t->status == RUN){
+			larger_ticks = t->ticks;
+			ready = t;
 		}
 	}
+
 	if(larger_ticks <= 0){
 		for(i = 0; i<NR_TASK; i++){
-			if(!task[i])continue;
-			task[i]->ticks = task[i]->priority;
-			if(task[i]->priority > larger_ticks){
-				larger_ticks = task[i]->priority;
-				ready = task[i];
+			t = task[i];
+			if(!t || t == current_task)continue;
+			t->ticks = t->priority;
+			if(t->priority > larger_ticks && t->status == RUN){
+				larger_ticks = t->priority;
+				ready = t;
 			}
 		}
 	}
+	
+	/* if no process is running run process 0 */
 	ready->ticks--;
-	printk("next process :%d, ticks:%d\n", ready->pid, ready->ticks);
+/*	__asm__(
+	"mov %0, %%es\n\t"
+	"mov %1, %%gs\n\t"
+	::"r"(current_task->pid),"r"(ready->pid));
+*/
+	assert(ready != current_task);
+
+//	printk("next process :%d\n", ready->pid);
+//	printk("current process :%d\n", current_task->pid);
 	switch_to(ready->pid);
 }

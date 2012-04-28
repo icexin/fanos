@@ -1,38 +1,47 @@
 #include <unistd.h>
+#include <sys.h>
+#include <debug.h>
 
 int write(int fd, char *buf, int len)
 {
-	__asm__ __volatile__("mov $0, %%eax;int $0x80"
-		::"b"(fd),"c"(buf),"d"(len)
-	);
+	syscall3(SYS_WRITE, fd, buf, len);
+}
+
+int read(int fd, char *buf, int len)
+{
+	syscall3(SYS_READ, fd, buf, len);
 }
 
 long get_ticks()
 {
-	__asm__ __volatile__("mov $1, %eax; int $0x80");
+	syscall0(SYS_TICKS);
 }
 
 int fork()
 {
-	__asm__ __volatile__ ("mov $2, %%eax;int $0x80;":::"eax");
+	syscall0(SYS_FORK);
 }
 
 void exit(int status)
 {
-	__asm__ __volatile__ ("mov $4, %%eax\n\t" \
-			      "mov %0, %%ebx\n\t" \
-			      "int $0x80;"::"b"(status):"eax");
+	syscall1(SYS_EXIT, status);
 }
 
 int exec(char *name)
 {
-	__asm__ __volatile__ (
-	"mov $3, %%eax\n" \
-	"mov %0, %%ebx\n" \
-	"int $0x80;"::"r"(name):"eax","ebx");
+	syscall1(SYS_EXEC, name);
 }
 
 int getpid()
 {
-	__asm__ __volatile__("mov $5, %eax; int $0x80");
+	syscall0(SYS_GETPID);
+}
+int waitpid(int pid, int *status)
+{
+	syscall2(SYS_WAITPID, pid, status);
+}
+
+int wait(int *status)
+{
+	return waitpid(-1, status);
 }

@@ -6,7 +6,7 @@
 
 #define assert(exp) do{ \
 if(!(exp)){ \
-	fprintf(STDOUT_FILENO, "exp:%s\nfile:%s\nbase_file:%s\nline:%d\n", \
+	printk("exp:%s\nfile:%s\nbase_file:%s\nline:%d\n", \
 		#exp, __FILE__, __BASE_FILE__, __LINE__); \
 	for(;;);\
 }\

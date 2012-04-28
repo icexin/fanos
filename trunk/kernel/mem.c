@@ -14,10 +14,18 @@ void *get_free_page()
 	for(i=FREE_MEM_START>>12; i<FREE_MEM_END>>12; i++){
 		if(!page_map[i]){
 			page_map[i] = 1;
-			printk("alloc mem:%x\n", i<<12);
+			printk("[mem] alloc page:%x, index=%d\n", i<<12, i);
 			return (void*)(i<<12);
 		}
 	}
+}
+
+void free_page(void *page)
+{
+	int i = (int)page >> 12;
+	printk("[mem] free page:%x, index:%d\n", page, i);
+	assert((int)page >= FREE_MEM_START && (int)page <= FREE_MEM_END);
+	page_map[i] = 0;
 }
 
 void *alloc_process_mem()
@@ -38,18 +46,11 @@ void free_process_mem(void *mem)
 	int i = (int)mem >> 20;
 	assert(i>=12 && i<32);
 	printk("free process mem:%x\n", (int)mem);
-	page_map[i] = 0;
-	page_map[i+1] = 0;
+	process_mem_map[i] = 0;
+	process_mem_map[i+1] = 0;
 }
 
 
-void free_page(void *page)
-{
-	int i = ((int)page -  FREE_MEM_START) >> 12;
-	printk("[mem] free page:%x, index:%d\n", page, i);
-	assert((int)page >= FREE_MEM_START && (int)page <= FREE_MEM_END);
-	page_map[i] = 0;
-}
 
 static void use_page(void *start, void *end)
 {

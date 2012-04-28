@@ -8,9 +8,24 @@
 .global invalid_seg, stack_error, general_protect, page_error, co_error
 .global reverse
 
-.extern handle
+.extern do_keyboard
 .extern do_timer
 .text
+
+save_reg:
+	pusha
+	push %ds
+	push %es
+	push %fs
+	push %gs
+
+	mov %ss, %ax
+	mov %ax, %ds
+	mov %ax, %es
+	mov %ax, %gs
+	mov $0x17, %ax
+	mov %ax, %fs
+	ret
 keyboard:
 
 	push %eax
@@ -24,7 +39,7 @@ keyboard:
 	mov $0x10, %eax
 	mov %ax, %ds
 
-	call handle
+	call do_keyboard
 	mov $0x20, %al
 	out %al, $0x20
 	pop %ds
@@ -40,10 +55,13 @@ timer:
 	push %es
 	push %fs
 	push %eax
-	push %ebx
 	push %ecx
 	push %edx
-	
+	push %ebx
+	push %ebp
+	push %esi
+	push %edi
+
 	mov $0x10, %eax
 	mov %ax, %ds
 
@@ -53,15 +71,18 @@ timer:
 	out %al, $0x20
 
 #取cpl
-	mov 32(%esp), %eax
+	mov 44(%esp), %eax
 	andl $3, %eax
 	push %eax
 	call do_timer
 	add $4, %esp
 
+	pop %edi
+	pop %esi
+	pop %ebp
+	pop %ebx
 	pop %edx
 	pop %ecx
-	pop %ebx
 	pop %eax
 	pop %fs
 	pop %es
@@ -119,6 +140,7 @@ stack_error:
 	push $12
 	call exception_handler
 general_protect:
+	xchg %bx, %bx
 	push $13
 	call exception_handler
 page_error:
@@ -134,6 +156,7 @@ reverse:
 	iret
 
 
-
-
+serial_int:
+		
+	iret
 

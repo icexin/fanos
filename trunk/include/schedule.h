@@ -34,14 +34,25 @@ struct tss_t
 	u16 iobase;
 }__attribute__((packed));
 
+
+#define RUN  0
+#define WAIT 1<<0
+#define HANG 1<<1
+#define TASK 1<<2
+
+
 struct task_t
 {
 	struct tss_t tss;
 	struct desc ldt[3];	
 	unsigned long start_addr;
 	int pid;
+	int ppid;
 	int ticks;
 	int priority;
+	int status;
+	int exit_status;
+	int istask;
 };
 
 
@@ -57,10 +68,10 @@ typedef int (*fn_ptr)();
 struct{long a,b;}__tmp; \
 __asm__("cmpl %%ecx, current_task\n\t" \
 	"je 1f\n\t" \
+	"xchg %%bx, %%bx\n\t" \
 	"movl %%ecx, current_task\n\t" \
 	"movw %%dx, %1\n\t" \
-	"movb $'0', (0xB8000)\n\t" \
-	"xchg %%bx, %%bx\n" \
+	"sti\n\t" \
 	"ljmp %0\n\t" \
 	"1:\n\t" \
 	::"m"(*&__tmp.a),"m"(*&__tmp.b), \
@@ -95,6 +106,6 @@ extern struct task_t *task[];
 extern struct task_t *current_task;
 
 void init_sched();
-int  create_task(int task_no, fn_ptr task_fn);
+int  create_task(fn_ptr task_fn);
 void schedule();
 #endif
