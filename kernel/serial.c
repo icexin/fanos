@@ -15,11 +15,11 @@ int rs_write(char *buf, int len)
 {
 	
 	int i;
+	cli();
 	for(i=0; i<len; i++){
-		cli();
 		out_byte(0x3F8, buf[i]);
 		while( !(0x40 & in_byte(0x3FD)));
-		sti();
 	}
+	sti();
 	return i;
 }

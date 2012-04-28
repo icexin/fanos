@@ -82,9 +82,27 @@ void get_fs_str(char *desc, void *src)
 	"incl %%edx\n\t" \
 	"movb %%fs:(%%edx), %%al\n\t" \
 	"jmp 1b\n\t" \
-	"2:nop\n\t" \
+	"2:movb $0, (%%ebx)\n\t" \
 	::"b"(desc),"d"(src):"eax");
 }
+
+void put_fs_str(char *desc, void *src, int n)
+{
+	__asm__ __volatile__(
+	"1:mov (%%ebx), %%al\n\t" \
+	"movb %%al, %%fs:(%%edx)\n\t" \
+	"inc %%edx\n\t" \
+	"inc %%ebx\n\t" \
+	"loop 1b \n\t"
+	::"b"(src),"d"(desc),"c"(n):"eax");
+}
+
+void put_fs_int(int *n, int val)
+{
+	__asm__ __volatile__(
+	"mov %%eax, %%fs:(%%ebx)\n\t"::"a"(val),"b"(n));
+}
+
 
 u8 in_byte(u16 port)
 {

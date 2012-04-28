@@ -133,6 +133,7 @@ int fs_open(char *name)
 			return get_inode(RAMDEV, ent[i].inode);
 		}
 	}
+	return 0;
 }
 
 

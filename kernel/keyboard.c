@@ -1,43 +1,54 @@
 #include <tty.h>
-#include <time.h>
+#include <keymap.h>
 
-unsigned char keymap;
+extern unsigned short keymap[];
+extern struct tty_t tty;
 
-void delay(int n)
+void do_keyboard()
 {
+	char code;
+	unsigned char key;
+	static char shift_key;
+	static char keybuf[128];
+	static int cnt = 0;
 	int i;
-	while(n--)
-		for(i=0; i<100000; i++);
-}
 
-void handle()
-{
-	static int i=0;
-	in_byte(0x60);
-	printf("%d,", i++);
-}
+	code = in_byte(0x60);
+	if(code & 0x80){
+		code &= 0x7F;
+		key = keymap[code*KEYMAP_COLS];
+		if(key == LSHIFT || key == RSHIFT){
+			shift_key = 0;
+		}
+		return;
+	}else{
+		if(shift_key){
+			key = keymap[code*KEYMAP_COLS+1];
+		}else{
+			key = keymap[code*KEYMAP_COLS];
+		}
+		if(key == LSHIFT || key == RSHIFT){
+			shift_key = 1;
+			return;
+		}
+	}
+	
+	i = tty.out_buf.tail; 
+	tty.out_buf.data[i] = key;
+	tty.out_buf.tail = (i + 1) % TTY_BUF_CNT;
+	tty.out_buf.cnt++;
 
-int taska()
-{
-	while(1)
-	{
-		__asm__ __volatile__("mov $0, %eax");
+	keybuf[cnt++] = key;
+	if(key == '\n'){
+		char *p = keybuf;
+		for(; p<keybuf+cnt; p++){
+			i = tty.in_buf.tail;
+			tty.in_buf.data[i] = *p;
+			tty.in_buf.tail = (i + 1) % TTY_BUF_CNT;
+			tty.in_buf.cnt++;
+		}
+		cnt = 0;
 	}
 }
 
-int taskb()
-{
-	while(1)
-	{
-		__asm__ __volatile__("mov $1, %eax");
-	}
-}
-
-int taskc()
-{
-	while(1)
-	{
-		__asm__ __volatile__("mov $2, %eax");
-	}
-}
 

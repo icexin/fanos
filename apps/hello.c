@@ -5,20 +5,18 @@ int main()
 {
 
 	printf("hello! it's a app\n");
-	int pid = fork();
 	printf("pid=%d\n", getpid());
-	if(pid){
-		int i;
-		for(i=0; i<1000; i++){
-			printf("father:%d\n", i);
-		}
-		exit(0);
+	int pid = fork();
+
+	if(pid){ //parent
+		printf("parent\n");
+		wait(0);
 	}else{
-		int i;
-		for(i=1; i<5000; i++){
-			printf("son:%d\n", i);
-		}
-		exit(0);
+		printf("son\n");
+		int ticks = get_ticks();
+		printf("ticks=%d\n", ticks);
+		exit(ticks % 10);
 	}
+
 	return 0;
 }

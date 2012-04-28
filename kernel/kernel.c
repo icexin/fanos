@@ -5,7 +5,7 @@
 
 void panic(char *str)
 {
-	fprintf(STDERR_FILENO, "kernel panic:%s\n", str);
+	printk("kernel panic:%s\n", str);
 	for(;;);
 }
 
@@ -22,10 +22,10 @@ int log(const char *fmt, ...)
 void hex_dump(char *buf, int len)
 {
 	int i;
-	printk("%x:", 0);
+	printk("%x:", (int)buf);
 	for(i=0; i<len; i++){
 		if(i % 16 == 0 && i != 0){
-			printk("\n%x:", i);
+			printk("\n%x:", (int)(buf+i));
 		}
 		printk("%x ", *(unsigned char*)buf++);
 	}

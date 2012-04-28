@@ -9,7 +9,10 @@ int exec(char*name);
 int fork();
 long get_ticks();
 int write(int fd, char *buf, int len);
+int read(int fd, char *buf, int len);
 int getpid();
 void exit(int status);
+int waitpid(int pid, int *status);
+int wait(int *status);
 
 #endif

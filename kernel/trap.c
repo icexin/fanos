@@ -50,7 +50,7 @@ void init_idt()
 	for(i=0x20; i<0xFF; i++){
 		create_idt_desc(idt+i, DA_386IGate, reverse, PRIVILEGE_KRNL);
 	}
-/*
+	/*
 	create_idt_desc(idt + 0x00, DA_386IGate, divide_error, PRIVILEGE_KRNL);
 
 	create_idt_desc(idt + 0x01, DA_386IGate, debug, PRIVILEGE_KRNL);
@@ -65,10 +65,10 @@ void init_idt()
 	create_idt_desc(idt + 0x0A, DA_386IGate, invalid_tss, PRIVILEGE_KRNL);
 	create_idt_desc(idt + 0x0B, DA_386IGate, invalid_seg, PRIVILEGE_KRNL);
 	create_idt_desc(idt + 0x0C, DA_386IGate, stack_error, PRIVILEGE_KRNL);
-	create_idt_desc(idt + 0x0D, DA_386IGate, general_protect, PRIVILEGE_KRNL);
 	create_idt_desc(idt + 0x0E, DA_386IGate, page_error, PRIVILEGE_KRNL);
 	create_idt_desc(idt + 0x10, DA_386IGate, co_error, PRIVILEGE_KRNL);
 */
+	create_idt_desc(idt + 0x0D, DA_386IGate, general_protect, PRIVILEGE_KRNL);
 	create_idt_desc(idt + 0x20, DA_386IGate, timer, PRIVILEGE_KRNL);
 
 	/*键盘中断*/
@@ -86,7 +86,7 @@ void init_idt()
 	
 	init_8259A();
 	//8259a主芯片的中断mask
-	out_byte(INT_M_CTLMASK,	0xFC);
+	out_byte(INT_M_CTLMASK,	0xFF);
 	//8259a从芯片的中断mask
 	out_byte(INT_S_CTLMASK,	0xFF);
 
@@ -137,11 +137,12 @@ static void init_timer()
 
 void do_reverse()
 {
-	fprintf(STDERR_FILENO, "Not yet handled error\n");
+//	printk("Not yet handled error\n");
 }
 
 void exception_handler(int vector, int err_code, int eip, int cs, int eflags)
 {
+	while(1);
 	__asm__ __volatile__("xchg %bx,%bx");
 	char * err_msg[] = {"#DE Divide Error",
 			    "#DB RESERVED",
