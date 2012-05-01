@@ -11,7 +11,7 @@ int main()
 	printf("welcome to fanos!\n");
 	while(1){
 		printf("$ ");
-		gets(buf);
+		getline(buf, 50);
 		if(!strcmp(buf, "hello")){
 			int pid = fork();
 			if(!pid){

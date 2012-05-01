@@ -1,15 +1,19 @@
 #include <string.h>
 
-int strlen(char *str)
+int strlen(const char *str)
 {
 	int len = 0;
-	while(*str++)len++;
+	if(str == 0)
+		return 0;
+	while(*str++)++len;
 	return len;
 }
 
 
-char * strcpy(char *dest, char *src)
+char * strcpy(char *dest, const char *src)
 {
+	if(src == 0 || dest == 0)
+		return 0;
 	char *p = dest;
 	while(*src)
 	{
@@ -18,8 +22,10 @@ char * strcpy(char *dest, char *src)
 	return p;
 }
 
-int strcmp(char *s1, char *s2)
+int strcmp(const char *s1, const char *s2)
 {
+	if(s1 == 0 || s2 == 0)
+		return 0;
 	while(*s1 && *s2){
 		if(*s1 != *s2){
 			break;

@@ -68,7 +68,7 @@ void init_idt()
 	create_idt_desc(idt + 0x0E, DA_386IGate, page_error, PRIVILEGE_KRNL);
 	create_idt_desc(idt + 0x10, DA_386IGate, co_error, PRIVILEGE_KRNL);
 */
-	create_idt_desc(idt + 0x0D, DA_386IGate, general_protect, PRIVILEGE_KRNL);
+//	create_idt_desc(idt + 0x0D, DA_386IGate, general_protect, PRIVILEGE_KRNL);
 	create_idt_desc(idt + 0x20, DA_386IGate, timer, PRIVILEGE_KRNL);
 
 	/*键盘中断*/
