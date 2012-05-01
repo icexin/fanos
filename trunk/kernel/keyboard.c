@@ -1,6 +1,8 @@
 #include <tty.h>
 #include <keymap.h>
 
+#define KEY_BUF_LEN 128
+
 extern unsigned short keymap[];
 extern struct tty_t tty;
 
@@ -9,7 +11,7 @@ void do_keyboard()
 	char code;
 	unsigned char key;
 	static char shift_key;
-	static char keybuf[128];
+	static char keybuf[KEY_BUF_LEN];
 	static int cnt = 0;
 	int i;
 
@@ -33,19 +35,25 @@ void do_keyboard()
 		}
 	}
 	
-	i = tty.out_buf.tail; 
-	tty.out_buf.data[i] = key;
-	tty.out_buf.tail = (i + 1) % TTY_BUF_CNT;
-	tty.out_buf.cnt++;
+	/* echo the key */
+	buf_push(&tty.out_buf, key);
 
+	/* we flush the keyboard buffer when it's full and
+	 * the current key is not '\n'
+	 */
+
+	if(cnt == KEY_BUF_LEN  && key != '\n'){
+		printk("keyboard buffer full\n");
+		key = '\n';
+	}
+		
+	
 	keybuf[cnt++] = key;
+
 	if(key == '\n'){
 		char *p = keybuf;
 		for(; p<keybuf+cnt; p++){
-			i = tty.in_buf.tail;
-			tty.in_buf.data[i] = *p;
-			tty.in_buf.tail = (i + 1) % TTY_BUF_CNT;
-			tty.in_buf.cnt++;
+			buf_push(&tty.in_buf, *p);
 		}
 		cnt = 0;
 	}

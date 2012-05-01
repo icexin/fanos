@@ -17,3 +17,4 @@ shell:head.o shell.o ../lib/lib.o
 clean:
 	rm -f *.o
 	rm -f .depend
+	rm -f hello shell
