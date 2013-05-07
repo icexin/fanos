@@ -1,44 +1,34 @@
 CC=gcc
 ASM=nasm
-CFLAGS:=-nostdlib -nostdinc -fno-builtin -fno-stack-protector -g -Iinclude
+CFLAGS:=-nostdlib -nostdinc -fno-builtin -fno-stack-protector -g -Iinclude -Wall -DDEBUG
 
-.PHONY:all kernel begin mount serial umount init kern lib fs apps
+.PHONY:all kernel begin mount umount init kern lib fs apps
 all: kernel apps
 
 kernel:kernel.bin
 
-
 mount:
-	if ! grep 'osimg' /etc/mtab ;then \
-		mkdir -p /tmp/tmpfs&& \
-		sudo mount tmpfs /tmp/tmpfs -t tmpfs&&\
-		cp images/hd.img /tmp/tmpfs/hd.img&&\
-		sudo mount  -o loop,offset=32256 /tmp/tmpfs/hd.img osimg&&\
-		sudo cp images/ramfs.img osimg/ramfs.img&&\
-		sudo mount -o loop osimg/ramfs.img ramfs \
-	;fi 
+	sudo mount  -o loop,offset=32256 images/hd.img osimg
+	sudo cp images/ramfs.img osimg/ramfs.img
+	sudo mount -o loop osimg/ramfs.img ramfs
+
 umount:
-	if grep 'osimg' /etc/mtab; then \
-		cp -f /tmp/tmpfs/hd.img images/hd.img; \
-		cp -f osimg/ramfs.img images/ramfs.img; \
-		sudo umount ramfs; \
-		sudo umount osimg ; \
-		sudo umount /tmp/tmpfs;\
-	fi
+	sudo cp osimg/ramfs.img images/ramfs.img
+	sudo umount -f ramfs
+	sudo umount -f osimg
 
-serial:
-	if [ ! -e "serial" ]; then mkfifo serial; fi
-
-begin:mount serial kernel
+begin:kernel apps
 	sudo cp kernel.bin osimg/kernel.bin && sync
+	#bochs -q -f script/bochsrc
+	qemu-system-i386 -m 32 -hda images/hd.img -serial stdio
+debug:kernel apps
+	sudo cp kernel.bin osimg/kernel.bin &&sync
+	#bochs_dbg -q   -f script/bochsrc_dbg &
+	qemu-system-i386 images/hd.img -serial stdio -s -S -machine accel=tcg
+
+local:kernel apps
+	sudo cp kernel.bin osimg/kernel.bin &&sync
 	bochs -q   -f script/bochsrc
-debug:mount serial kernel
-	sudo cp kernel.bin osimg/kernel.bin &&sync
-	bochs -q   -f script/bochsrc_dbg &
-	gdb
-local:mount serial kernel
-	sudo cp kernel.bin osimg/kernel.bin &&sync
-	bochs_local -q   -f script/bochsrc
 
 vmlinux26.bin:kernel.bin
 	objcopy -O binary $^ $@

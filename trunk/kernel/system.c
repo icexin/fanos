@@ -1,29 +1,27 @@
-#include <system.h>
-#include <schedule.h>
+#include <stdint.h>
+#include <fanos/system.h>
 
-
-
-
-unsigned char gdt_ptr[6];
+uint8_t gdt_ptr[6];
 struct desc gdt[GDT_SIZE];
 
-u8		idt_ptr[6];	/* 0~15:Limit  16~47:Base */
-struct gate		idt[IDT_SIZE]; /*idt表*/
-
-
+uint8_t idt_ptr[6];	/* 0~15:Limit  16~47:Base */
+struct gate	idt[IDT_SIZE]; /*idt表*/
 
 void init_gdt()
 {
-	u16 *gdt_ptr_limit = (u16*)gdt_ptr; //gdt界限
-	u32 **gdt_ptr_base  = (u32**)(gdt_ptr + 2);//gdt基址
+	// gdt_ptr分两部分,4字节的起始地址和2字节的长度.
+	uint16_t *gdt_ptr_limit = (uint16_t*)gdt_ptr; //gdt界限
+	uint32_t **gdt_ptr_base = (uint32_t**)(gdt_ptr + 2);//gdt基址
 
 	create_gdt_desc(gdt, 0, 0, 0); //空段
-	create_gdt_desc(gdt + 1, 0, 0xFFFFF, DA_CR | DA_32 | DA_LIMIT_4K); //代码段
-	create_gdt_desc(gdt + 2, 0, 0xFFFFF, DA_DRW | DA_32 | DA_LIMIT_4K); //数据段
+	create_gdt_desc(gdt+1, 0, 0xFFFFF, DA_CR|DA_32|DA_LIMIT_4K); //代码段
+	create_gdt_desc(gdt+2, 0, 0xFFFFF, DA_DRW|DA_32|DA_LIMIT_4K); //数据段
 	
+	*gdt_ptr_limit = GDT_SIZE * sizeof(struct desc);
+	*gdt_ptr_base = (uint32_t*)gdt;
 
-	*gdt_ptr_limit = GDT_SIZE;
-	*gdt_ptr_base = (u32*)gdt;
+	// 装载gdt并置cs为代码段选择子 
+	// ljmp cs, offset
 	__asm__ __volatile__("lgdt gdt_ptr\n\t"
 						 "mov $0x10, %%eax\n\t"
 						 "mov %%ax, %%ds\n\t"
@@ -32,12 +30,10 @@ void init_gdt()
 						 "ljmp $0x08,$1f\n\t1:\n\t"
 						 :::"eax"
 	);
-
 }
-
-
  
-void create_gdt_desc(struct desc *d, u32 base, u32 limit, u16 flag)
+void create_gdt_desc(struct desc *d, uint32_t base, 
+	uint32_t limit, uint16_t flag)
 {
 	d->limit_low = limit & 0xFFFF; 
 	d->base_low = base & 0xFFFF;
@@ -47,16 +43,18 @@ void create_gdt_desc(struct desc *d, u32 base, u32 limit, u16 flag)
 	d->base_high = (base >> 24) & 0xFF;
 }
 
-void create_ldt_desc(struct desc *d, u32 base, u32 limit, u16 flag)
+// ldt结构和gdt一样,只是选择子上的不同造就作用不同
+void create_ldt_desc(struct desc *d, uint32_t base,
+	uint32_t limit, uint16_t flag)
 {
 	create_gdt_desc(d, base, limit, flag);
 }
 
 
-void create_idt_desc(struct gate *p_gate, u8 desc_type,
-			  int_handler handler, unsigned char privilege)
+void create_idt_desc(struct gate *p_gate, uint8_t desc_type, 
+			  void(*handler)(), uint8_t privilege)
 {
-	u32	base	= (u32)handler;
+	uint32_t base = (uint32_t)handler;
 	p_gate->offset_low	= base & 0xFFFF;
 	p_gate->selector	= 0x08;
 	p_gate->dcount		= 0;
@@ -64,6 +62,7 @@ void create_idt_desc(struct gate *p_gate, u8 desc_type,
 	p_gate->offset_high	= (base >> 16) & 0xFFFF;
 }
 
+// get_fs_xx 从用户空间获取资源
 char get_fs_byte(void *addr)
 {
 	__asm__ __volatile__(
@@ -86,7 +85,7 @@ void get_fs_str(char *desc, void *src)
 	::"b"(desc),"d"(src):"eax");
 }
 
-void put_fs_str(char *desc, void *src, int n)
+void put_fs_buff(char *desc, void *src, int n)
 {
 	__asm__ __volatile__(
 	"1:mov (%%ebx), %%al\n\t" \
@@ -97,14 +96,31 @@ void put_fs_str(char *desc, void *src, int n)
 	::"b"(src),"d"(desc),"c"(n):"eax");
 }
 
-void put_fs_int(int *n, int val)
+void get_fs_buff(char *desc, void *src, int n)
 {
 	__asm__ __volatile__(
-	"mov %%eax, %%fs:(%%ebx)\n\t"::"a"(val),"b"(n));
+	"1:mov %%fs:(%%ebx), %%al\n\t" \
+	"movb %%al, (%%edx)\n\t" \
+	"inc %%edx\n\t" \
+	"inc %%ebx\n\t" \
+	"loop 1b \n\t"
+	::"b"(src),"d"(desc),"c"(n):"eax");
 }
 
+void put_fs_int(int *dest, int val)
+{
+	__asm__ __volatile__(
+	"mov %%eax, %%fs:(%%ebx)\n\t"::"a"(val),"b"(dest));
+}
 
-u8 in_byte(u16 port)
+void get_fs_int(int *dest, int* src)
+{
+	__asm__ __volatile__(
+	"mov %%fs:(%%ebx), %%eax\n\t"
+	"mov %%eax, (%%edx)\n\t"::"b"(src),"d"(dest):"eax");
+}
+
+uint8_t in_byte(uint16_t port)
 {
 	__asm__ __volatile__(
 	"xor %%eax, %%eax \n\t"
@@ -115,7 +131,7 @@ u8 in_byte(u16 port)
 	"nop\n\t"::"d"(port):"eax");
 }
 
-void out_byte(u16 port, u8 out_data)
+void out_byte(uint16_t port, uint8_t out_data)
 {
 	__asm__ __volatile__(
 	"out %%al, %%dx\n\t"
@@ -124,7 +140,7 @@ void out_byte(u16 port, u8 out_data)
 	"nop\n\t"::"d"(port),"a"(out_data));
 }
 
-u16 in_word(u16 port)
+uint16_t in_word(uint16_t port)
 {
 	__asm__ __volatile__(
 	"xor %%eax, %%eax\n\t"
@@ -136,7 +152,7 @@ u16 in_word(u16 port)
 
 
 
-void out_word(u16 port, u16 data)
+void out_word(uint16_t port, uint16_t data)
 {
 	__asm__ __volatile__(
 	"outw %%ax, %%dx\n\t"
@@ -159,4 +175,8 @@ void mdelay(unsigned long n)
 		udelay(1000);
 }
 
+void hlt()
+{
+	__asm__("hlt\n\t");
+}
 

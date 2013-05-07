@@ -7,16 +7,16 @@ bad_sys_call:
 	mov $-1, %eax
 	iret
 sys_call:
-	cmpl nr_system_calls - 1, %eax #超出调用号范围退出
+	cmpl nr_system_calls - 1, %eax #超出调用号范围(<1)退出
 	ja bad_sys_call
 
 	push %ds
 	push %es
 	push %fs
+	push %gs
 	push %esi
 	push %edi
 	push %ebp
-
 
 #依次把参数压栈,%ebx,%ecx,%edx依次为第1，2，3个参数
 	pushl %edx
@@ -27,6 +27,7 @@ sys_call:
 	mov $0x10, %edx
 	mov %dx, %ds
 	mov %dx, %es
+	mov %dx, %gs
 #fs指向局部数据段
 	mov $0x17, %edx
 	mov %dx, %fs
@@ -37,9 +38,8 @@ sys_call:
 	pop %ebp
 	pop %edi
 	pop %esi
+	pop %gs
 	pop %fs
 	pop %es
 	pop %ds
 	iret
-
-

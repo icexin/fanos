@@ -1,22 +1,13 @@
-#include <kernel.h>
-#include <tty.h>
+#include <fanos/kernel.h>
+#include <fanos/tty.h>
 #include <unistd.h>
-
+#include <stdio.h>
+#include <stdarg.h>
 
 void panic(char *str)
 {
 	printk("kernel panic:%s\n", str);
 	for(;;);
-}
-
-int log(const char *fmt, ...)
-{
-	static char tmp[256];
-	int n;
-	char* ap = (char*)((char*)&fmt + 4);
-	n = vsprintf(tmp, fmt, ap);
-	write(2, tmp, n);
-	return n;
 }
 
 void hex_dump(char *buf, int len)
@@ -36,10 +27,11 @@ int printk(const char *fmt, ...)
 {
 	static char tmp[256];
 	int n;
-	char* ap = (char*)((char*)&fmt + 4);
-	n = vsprintf(tmp, fmt, ap);
+	va_list ap;
+	va_start(ap, fmt);
+	n = vsnprintf(tmp, 256, fmt, ap);
+	va_end(ap);
+
 	rs_write(tmp, n);
 	return n;
 }
-
-

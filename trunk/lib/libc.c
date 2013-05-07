@@ -1,6 +1,7 @@
+#include <stdio.h>
 #include <unistd.h>
 #include <sys.h>
-#include <debug.h>
+#include <stdarg.h>
 
 int write(int fd, char *buf, int len)
 {
@@ -27,9 +28,24 @@ void exit(int status)
 	syscall1(SYS_EXIT, status);
 }
 
-int exec(char *name)
+int execv(char *name, char** argv)
 {
-	syscall1(SYS_EXEC, name);
+	syscall2(SYS_EXEC, name, argv);
+}
+
+int execl(char* name, ...)
+{
+	char* argv[10] = {NULL};
+	char** p = argv;
+	char* argp = NULL;
+	va_list ap;
+	va_start(ap, name);
+	do {
+		argp = va_arg(ap, char*);
+		*p++ = argp;
+	} while(argp != NULL);
+	*p = NULL;
+	return execv(name, argv);
 }
 
 int getpid()
@@ -44,4 +60,14 @@ int waitpid(int pid, int *status)
 int wait(int *status)
 {
 	return waitpid(-1, status);
+}
+
+void sleep(size_t msec)
+{
+	syscall1(SYS_SLEEP, msec);
+}
+
+int open(char* name, char* buf)
+{
+	syscall2(SYS_OPEN, name, buf);
 }

@@ -1,25 +1,31 @@
-#include <schedule.h>
-#include <debug.h>
+#include <fanos/task.h>
+#include <fanos/mem.h>
+#include <fanos/debug.h>
+#include <fanos/kernel.h>
+#include <fanos/schedule.h>
 
-static clean_up(struct task_t *t)
+static void clean_up(struct task_t *t)
 {
 	task[t->pid] = 0;
+	free_page((void*)t);
+	log("task %d clean\n", t->pid);
 }
 
 void sys_exit(int status)
 {
-	free_page((void*)current_task);
-	free_process_mem((void*)current_task->start_addr);
-
 	int i;
 	struct task_t *parent;
 	struct task_t *t;
-	
+
 	if(current_task->pid == 0)
 		panic("try to exit process 0\n");
 	if(current_task->istask)
 		panic("try to exit task\n");
 	
+	eflags_t eflag;
+	disable_hwint(eflag);
+	free_process_mem((void*)current_task->start_addr);
+
 	current_task->exit_status = status;
 	current_task->status = HANG;
 
@@ -38,6 +44,8 @@ void sys_exit(int status)
 			t->ppid = 0;
 		}
 	}
+	log("task %d exit\n", current_task->pid);
+	restore_hwint(eflag);
 	schedule();
 }
 
@@ -55,14 +63,13 @@ int sys_waitpid(int pid, int *status)
 			if(t->ppid != ppid)continue;
 
 			/* pid == -1 means that we wait for any son process */
-			if(pid = -1 || t->pid == pid){
+			if(pid == -1 || t->pid == pid){
 				flag = 1;
 				if(t->status == HANG){
 					if(status)
 						put_fs_int(status,t->exit_status);
-					printk("task %d clean\n", t->pid);
 					clean_up(t);
-					return ;
+					return 0;
 				}
 			}
 
@@ -75,7 +82,7 @@ int sys_waitpid(int pid, int *status)
 
 		if(!flag)
 			return -1;
-		/*等待子进程退出*/
-		schedule();
+		/*等待子进程退出, 下个时间片再继续检查*/
+		sleep_on(current_task);
 	}	
 }
