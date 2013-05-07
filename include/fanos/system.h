@@ -1,11 +1,10 @@
 #ifndef _SYSTEM_H
 #define _SYSTEM_H
 
-#include <type.h>
+#include <stdint.h>
 
 #define GDT_SIZE 128
 #define IDT_SIZE 256
-
 
 /* 描述符类型值说明 */
 #define	DA_32			0x4000	/* 32 位段*/
@@ -34,49 +33,78 @@
 #define	PRIVILEGE_TASK	1
 #define	PRIVILEGE_USER	3
 
+/* 中断向量号 */
+#define IRQ_TIMER 0
+#define IRQ_KEYBOARD 1
+#define IRQ_SLAVE 2
+
+/* timer relate */
+#define CLK_8253 1193180
+#define TIMER_HZ 100
+
 #define cli() __asm__("cli")
 #define sti() __asm__("sti")
 
 /* 门描述符 */
 struct gate
 {
-	u16	offset_low;	/* Offset Low */
-	u16	selector;	/* Selector */
-	u8	dcount;		/* 该字段只在调用门描述符中有效。如果在利用
+	uint16_t	offset_low;	/* Offset Low */
+	uint16_t	selector;	/* Selector */
+	uint8_t	dcount;		/* 该字段只在调用门描述符中有效。如果在利用
 				   调用门调用子程序时引起特权级的转换和堆栈
 				   的改变，需要将外层堆栈中的参数复制到内层
 				   堆栈。该双字计数字段就是用于说明这种情况
 				   发生时，要复制的双字参数的数量。*/
-	u8	attr;		/* P(1) DPL(2) DT(1) TYPE(4) */
-	u16	offset_high;	/* Offset High */
+	uint8_t	attr;		/* P(1) DPL(2) DT(1) TYPE(4) */
+	uint16_t	offset_high;	/* Offset High */
 }__attribute__((packed));
 
 /* 存储段描述符/系统段描述符 */
 struct desc		/* 共 8 个字节 */
 {
-	u16	limit_low;		/* Limit */
-	u16	base_low;		/* Base */
-	u8	base_mid;		/* Base */
-	u8	attr1;			/* P(1) DPL(2) DT(1) TYPE(4) */
-	u8	limit_high_attr2;	/* G(1) D(1) 0(1) AVL(1) LimitHigh(4) */
-	u8	base_high;		/* Base */
+	uint16_t	limit_low;		/* Limit */
+	uint16_t	base_low;		/* Base */
+	uint8_t	base_mid;		/* Base */
+	uint8_t	attr1;			/* P(1) DPL(2) DT(1) TYPE(4) */
+	uint8_t	limit_high_attr2;	/* G(1) D(1) 0(1) AVL(1) LimitHigh(4) */
+	uint8_t	base_high;		/* Base */
 }__attribute__((packed));
 
 extern struct desc gdt[];
 
 void init_gdt();
-void create_gdt_desc(struct desc *d, u32 base, u32 limit, u16 flag);
-void create_gdt_desc(struct desc *d, u32 base, u32 limit, u16 flag);
-void create_idt_desc(struct gate *p_gate, u8 desc_type, int_handler handler, unsigned char privilege);
+void create_gdt_desc(struct desc *d, uint32_t base, uint32_t limit, uint16_t flag);
+void create_ldt_desc(struct desc *d, uint32_t base, uint32_t limit, uint16_t flag);
 
+// 只有小于或等于privilege的进程才能产生这个中断描述符描述的中断
+void create_idt_desc(struct gate *p_gate, uint8_t desc_type, void(*handler)(), unsigned char privilege);
+void init_idt();
+void init_pic();
 
-void out_byte(u16 port, u8 out_data);
-u8 in_byte(u16 port);
+void pic_enable(uint16_t line);
+void pic_disable(uint16_t line);
 
-void out_word(u16 port, u16 data);
-u16 in_word(u16 port);
+char get_fs_byte(void* addr);
+void get_fs_str(char* desc, void* src);
+void get_fs_buff(char* desc, void* src, int n);
+void put_fs_buff(char* desc, void* src, int n);
+void get_fs_int(int* dest, int *src);
+void put_fs_int(int* dest, int val);
+
+void out_byte(uint16_t port, uint8_t out_data);
+uint8_t in_byte(uint16_t port);
+
+void out_word(uint16_t port, uint16_t data);
+uint16_t in_word(uint16_t port);
 
 void udelay(unsigned long n);
 void mdelay(unsigned long n);
+
+// the true sleep function. cpu will sleep until next interupt comes
+void hlt();
+
+typedef unsigned long eflags_t;
+#define disable_hwint(eflags) __asm__("pushf; pop %0; cli;":"=g"(eflags))
+#define restore_hwint(eflags) __asm__("push %0; popf;"::"g"(eflags))
 
 #endif
