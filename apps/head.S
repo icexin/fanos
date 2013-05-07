@@ -8,4 +8,3 @@ _start:
 	call main
 	push %eax
 	call exit
-

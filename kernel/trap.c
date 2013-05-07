@@ -1,8 +1,8 @@
-#include <type.h>
-#include <system.h>
-#include <sys.h>
+#include <fanos/type.h>
+#include <fanos/system.h>
+#include <fanos/tty.h>
+#include <fanos/kernel.h>
 #include <unistd.h>
-#include <tty.h>
 
 /* 8259A interrupt controller ports. */
 #define INT_M_CTL     0x20 /* I/O port for interrupt controller       <Master> */
@@ -10,10 +10,8 @@
 #define INT_S_CTL     0xA0 /* I/O port for second interrupt controller<Slave>  */
 #define INT_S_CTLMASK 0xA1 /* setting bits in this port disables ints <Slave>  */
 
-
-
 extern struct gate idt[];
-extern u8   idt_ptr[];
+extern uint8_t idt_ptr[];
 extern void keyboard();
 extern void timer();
 extern void sys_call();
@@ -40,19 +38,18 @@ void co_error();
 
 void reverse();
 
-
 void init_idt()
 {
-	u16 *idt_ptr_limit = (u16*)idt_ptr; //idt界限
-	u32 **idt_ptr_base  = (u32**)(idt_ptr + 2);//idt基址
+	uint16_t *idt_ptr_limit = (uint16_t*)idt_ptr; //idt界限
+	uint32_t **idt_ptr_base  = (uint32_t**)(idt_ptr + 2);//idt基址
 
 	int i;
 	for(i=0x20; i<0xFF; i++){
 		create_idt_desc(idt+i, DA_386IGate, reverse, PRIVILEGE_KRNL);
 	}
+	
 	/*
 	create_idt_desc(idt + 0x00, DA_386IGate, divide_error, PRIVILEGE_KRNL);
-
 	create_idt_desc(idt + 0x01, DA_386IGate, debug, PRIVILEGE_KRNL);
 	create_idt_desc(idt + 0x02, DA_386IGate, nmi, PRIVILEGE_KRNL);
 	create_idt_desc(idt + 0x03, DA_386IGate, break_point, PRIVILEGE_KRNL);
@@ -65,10 +62,11 @@ void init_idt()
 	create_idt_desc(idt + 0x0A, DA_386IGate, invalid_tss, PRIVILEGE_KRNL);
 	create_idt_desc(idt + 0x0B, DA_386IGate, invalid_seg, PRIVILEGE_KRNL);
 	create_idt_desc(idt + 0x0C, DA_386IGate, stack_error, PRIVILEGE_KRNL);
+	create_idt_desc(idt + 0x0D, DA_386IGate, general_protect, PRIVILEGE_KRNL);
 	create_idt_desc(idt + 0x0E, DA_386IGate, page_error, PRIVILEGE_KRNL);
 	create_idt_desc(idt + 0x10, DA_386IGate, co_error, PRIVILEGE_KRNL);
-*/
-//	create_idt_desc(idt + 0x0D, DA_386IGate, general_protect, PRIVILEGE_KRNL);
+	*/
+
 	create_idt_desc(idt + 0x20, DA_386IGate, timer, PRIVILEGE_KRNL);
 
 	/*键盘中断*/
@@ -80,23 +78,23 @@ void init_idt()
 	
 
 	*idt_ptr_limit = IDT_SIZE * sizeof(struct gate);
-	*idt_ptr_base = (u32*)idt;
+	*idt_ptr_base = (uint32_t*)idt;
 	__asm__ __volatile__("lidt idt_ptr\n\t");
 	
-	
+}
+
+void init_pic()
+{	
+	init_idt();
 	init_8259A();
 	//8259a主芯片的中断mask
 	out_byte(INT_M_CTLMASK,	0xFF);
 	//8259a从芯片的中断mask
 	out_byte(INT_S_CTLMASK,	0xFF);
-
 	/*初始化时钟中断*/
 	init_timer();
-
+	pic_enable(IRQ_TIMER);
 }
-
-
-
 
 static void init_8259A()
 {
@@ -123,16 +121,33 @@ static void init_8259A()
 
 	/* Slave  8259, ICW4. */
 	out_byte(INT_S_CTLMASK,	0x1);
-
 }
 
+void pic_disable(uint16_t line)
+{
+	uint16_t port = INT_M_CTLMASK;
+	if (line > 8) {
+		port = INT_S_CTLMASK;
+		line -= 8;
+	}
+	out_byte(port, in_byte(port) | 1 << line);
+}
 
-#define CLK_8253 1193180
+void pic_enable(uint16_t line)
+{
+	uint16_t port = INT_M_CTLMASK;
+	if (line > 8) {
+		port = INT_S_CTLMASK;
+		line -= 8;
+	}
+	out_byte(port, in_byte(port) & ~(1 << line));
+}
+
 static void init_timer()
 {
 	out_byte(0x43, 0x36); //控制字：通道0工作在方式3，计数初值采用二进制
-	out_byte(0x40, CLK_8253 / 100 & 0xFF ); //100hz
-	out_byte(0x40, (CLK_8253 / 100 >> 8 ) & 0xFF);
+	out_byte(0x40, CLK_8253 / TIMER_HZ & 0xFF ); //100hz
+	out_byte(0x40, (CLK_8253 / TIMER_HZ >> 8 ) & 0xFF);
 }
 
 void do_reverse()
@@ -142,8 +157,7 @@ void do_reverse()
 
 void exception_handler(int vector, int err_code, int eip, int cs, int eflags)
 {
-	while(1);
-	__asm__ __volatile__("xchg %bx,%bx");
+	//__asm__ __volatile__("xchg %bx,%bx");
 	char * err_msg[] = {"#DE Divide Error",
 			    "#DB RESERVED",
 			    "—  NMI Interrupt",
@@ -165,11 +179,12 @@ void exception_handler(int vector, int err_code, int eip, int cs, int eflags)
 			    "#MC Machine Check",
 			    "#XF SIMD Floating-Point Exception"
 	};
-	fprintf(STDERR_FILENO, "error:%s\n", err_msg[vector]);
-	fprintf(STDERR_FILENO, "cs:%x\n", cs);
-	fprintf(STDERR_FILENO, "eip:%x\n", eip);
-	fprintf(STDERR_FILENO, "eflags:%x\n", eflags);
+	log("ERROR:%s\n", err_msg[vector]);
+	log("CS:%X\n", cs);
+	log("EIP:%X\n", eip);
+	log("EFLAGS:%X\n", eflags);
 	if(err_code != 0xFFFFFFFF){
-		fprintf(STDERR_FILENO, "error code:%x\n", err_code);
+		log("ERROR CODE:%X\n", err_code);
 	}
+	while(1);
 }

@@ -1,4 +1,4 @@
-CFLAGS:=-nostdlib -nostdinc -fno-builtin -fno-stack-protector -g -I../include
+CFLAGS:=-nostdlib -nostdinc -fno-builtin -fno-stack-protector -g -I../include -DDEBUG
 
 C_SRC:=main.c
 

@@ -12,78 +12,61 @@
 .extern do_timer
 .text
 
-save_reg:
-	pusha
+keyboard:
+	pusha	
 	push %ds
 	push %es
 	push %fs
 	push %gs
 
-	mov %ss, %ax
+	mov $0x10, %eax
 	mov %ax, %ds
 	mov %ax, %es
 	mov %ax, %gs
-	mov $0x17, %ax
+	mov $0x17, %eax
 	mov %ax, %fs
-	ret
-keyboard:
-
-	push %eax
-	push %ebx
-	push %ecx
-	push %edx
-	push %esi
-	push %edi
-
-	push %ds
-	mov $0x10, %eax
-	mov %ax, %ds
 
 	call do_keyboard
 	mov $0x20, %al
 	out %al, $0x20
+
+	pop %gs
+	pop %fs
+	pop %es
 	pop %ds
-	pop %edi
-	pop %esi
-	pop %edx
-	pop %ecx
-	pop %ebx
-	pop %eax
+
+	popa
 	iret
+
 timer:
 	push %ds
 	push %es
 	push %fs
-	push %eax
-	push %ecx
-	push %edx
-	push %ebx
-	push %ebp
-	push %esi
-	push %edi
+	push %gs
+	pusha
 
 	mov $0x10, %eax
 	mov %ax, %ds
+	mov %ax, %es
+	mov %ax, %gs
+	mov $0x17, %eax
+	mov %ax, %fs
 
 	incl ticks #系统嘀嗒
 
+	# EOI to interrupt controller
 	mov $0x20, %al
 	out %al, $0x20
 
-#取cpl
+# 取cpl
 	mov 44(%esp), %eax
 	andl $3, %eax
 	push %eax
 	call do_timer
 	add $4, %esp
 
-	pop %edi
-	pop %esi
-	pop %ebp
-	pop %ebx
-	pop %edx
-	pop %ecx
-	pop %eax
+	popa
+	pop %gs
 	pop %fs
 	pop %es
 	pop %ds
@@ -131,7 +114,7 @@ co_overflow:
 	call exception_handler
 invalid_tss:
 	push $10
-	xchg %bx, %bx
+	#xchg %bx, %bx
 	call exception_handler
 invalid_seg:
 	push $11
@@ -140,7 +123,7 @@ stack_error:
 	push $12
 	call exception_handler
 general_protect:
-	xchg %bx, %bx
+	#xchg %bx, %bx
 	push $13
 	call exception_handler
 page_error:
@@ -155,8 +138,6 @@ reverse:
 	call do_reverse
 	iret
 
-
 serial_int:
-		
 	iret
 

@@ -201,11 +201,11 @@ struct multiboot_mmap_entry
 	#define MULTIBOOT_MEMORY_AVAILABLE              1
 	#define MULTIBOOT_MEMORY_RESERVED               2
 	multiboot_uint32_t type;
-	} __attribute__((packed));
-	typedef struct multiboot_mmap_entry multiboot_memory_map_t;
+} __attribute__((packed));
+typedef struct multiboot_mmap_entry multiboot_memory_map_t;
 
-	struct multiboot_mod_list
-	{
+struct multiboot_mod_list
+{
 	/* the memory used goes from bytes 'mod_start' to 'mod_end-1' inclusive */
 	multiboot_uint32_t mod_start;
 	multiboot_uint32_t mod_end;

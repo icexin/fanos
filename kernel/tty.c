@@ -1,78 +1,75 @@
-#include <tty.h>
+#include <fanos/tty.h>
+#include <fanos/serial.h>
+#include <fanos/kernel.h>
+#include <fanos/system.h>
+#include <fanos/task.h>
 #include <string.h>
 #include <unistd.h>
-#include <system.h>
+#include <stdarg.h>
+#include <stdio.h>
 
-#define MAX_ROW 25
-#define MAX_COL 80
-
-#define screen(row,col) (*(videoram+((row)*MAX_COL+(col))*2))
-
-struct tty_t tty;
-char tty_in_lock, tty_out_lock;
+#define IO_BUFF_LEN 512
 
 char* const videoram = (char *const)0xB8000;
-
-
-static void tty_task();
-
-extern int rs_write(char *buf, int len);
+static int tty_task();
+struct tty_t tty;
 
 int sys_write(int fd, char *buf, int len)
 {
-	static char tmp[512];
-	get_fs_str(tmp, buf);
+	char tmp[IO_BUFF_LEN];
+	get_fs_buff(tmp, buf, IO_BUFF_LEN);
 
-	if(fd == 4)
+	if (len > IO_BUFF_LEN) {
+		len = IO_BUFF_LEN;
+	}
+
+	if(fd == 2)
 		return rs_write(tmp, len);
 	else
 		return tty_write(tmp, len);
-	
 }
 
 int sys_read(int fd, char *buf, int len)
 {
-	static char tmp[512];
+	char tmp[IO_BUFF_LEN];
 	if(len > 512){
 		printk("sys_read overflow\n");
 		len = 512;
 	}
-	tty_read(tmp, len);
-	put_fs_str(buf, tmp, len);
+	int cnt = tty_read(tmp, len);
+	put_fs_buff(buf, tmp, cnt + 1);
+	return cnt;
 }
-
-
 
 int tty_write(char *str, int len)
 {
-	char *p;
-	int i;
-	for(p=str; p<str+len; p++){
-		while(!buf_push(&tty.out_buf, *p)){
-			schedule();
-		}
+	int done = 0;
 	
+	while (buffq_full(&tty.out_buf)) {
+		log("tty out full\n");
+		ksema_down(&tty.out_sem);
 	}
+
+	kmutex_lock(&tty.out_mutex);
+	done = buffq_write(&tty.out_buf, str, len);
+	wake_up(tty.ttytask);
+	kmutex_unlock(&tty.out_mutex);
+
+	return done;
 }
 
 int tty_read(char *str, int len)
-{
-	int cnt = 0;
-	char ch;
-	while(cnt < len){
-		while(buf_empty(&tty.cooked_inbuf)){
-			schedule();
-		}
-		ch = buf_shift(&tty.cooked_inbuf);
-		if(ch != -1){
-			str[cnt++] = ch;
-		}
+{	
+	int done = 0;
+	while (buffq_empty(&tty.cooked_inbuf)) {
+		ksema_down(&tty.cooked_sem);
 	}
+	kmutex_lock(&tty.cooked_mutex);
+	done = buffq_read(&tty.cooked_inbuf, str, len);
+	str[done] = '\0';
+	kmutex_unlock(&tty.cooked_mutex);
+	return done;
 }
-
-
-
-
 
 void init_tty()
 {
@@ -85,14 +82,20 @@ void init_tty()
 	tty.row = 0;
 	tty.col = 0;
 
+	
+	buffq_init(&tty.in_buf);
+	buffq_init(&tty.out_buf);
+	buffq_init(&tty.cooked_inbuf);
+	tty.ttytask = create_task(tty_task);
 
-	buf_init(&tty.in_buf);
-	buf_init(&tty.out_buf);
-	buf_init(&tty.cooked_inbuf);
-	create_task(tty_task);
+	ksema_init(&tty.cooked_sem, 0);
+	kmutex_init(&tty.cooked_mutex);
+	ksema_init(&tty.out_sem, 0);
+	kmutex_init(&tty.out_mutex);
 
 	/* keyboard interrupt */
-	out_byte(0x21, in_byte(0x21)&~0x02);
+	pic_enable(IRQ_KEYBOARD);
+	tty_clear();
 }
 
 
@@ -149,7 +152,6 @@ void tty_write_char(char ch)
 		tty.row = MAX_ROW - 1;
 	}
 
-	
 	if(ch == '\b'){
 		screen(tty.row, tty.col) = ' ';
 	}else if(ch != '\n'){
@@ -158,104 +160,88 @@ void tty_write_char(char ch)
 	tty_update_cursor();
 }
 
-
-
-
-void tty_task()
+/* tty task 把键盘的输入字符按行规则处理,放入cooked_buf和outbuf
+ * 并把outbuf中的字符输出到屏幕
+ * 在没有任务做的时候进行睡眠,会被键盘和write调用唤醒
+ */
+int tty_task()
 {
-	printk("tty task start\n");
+	log("tty task start pid=%d\n", tty.ttytask->pid);
 
-	int i;
-	char ch;
-	struct tty_buf *inbuf, *cooked_inbuf, *outbuf;
+	struct buffq *inbuf, *cooked_inbuf, *outbuf;
 
 	inbuf = &tty.in_buf;
 	cooked_inbuf = &tty.cooked_inbuf;
 	outbuf = &tty.out_buf;
 
-	while(1){
-	/* we simply go to sleep when all the buffer is not in state */
-		while(buf_empty(inbuf) && buf_empty(outbuf)){
-
-			schedule();
-		}
-
+	int need_sleep = 1; //如果inbuf有字符则不会睡眠
+	while (1) {
+		need_sleep = 1;
+		kmutex_lock(&tty.out_mutex);
 		/* write the tty out buffer to screen */
-		if(!buf_empty(outbuf)){
-			tty_write_char(buf_shift(outbuf));
+		while (!buffq_empty(outbuf)) {
+			char ch = buffq_shift(outbuf);
+			int i = 0;
+			if (ch == '\t') {
+				for (i=0; i<TAB_BLANK_NUM; i++) {
+					tty_write_char(' ');
+				}
+			} else {
+				tty_write_char(ch);
+			}
 		}
+		ksema_up(&tty.out_sem);
+		kmutex_unlock(&tty.out_mutex);
 		
-		/* read in buffer to cooked buf
-		 * if the cooked buffe is full we just
-		 * drop the char
-		 */
+		while (!buffq_empty(inbuf)) {
+			char ch = 0;
+			ch = buffq_shift(inbuf);
 
-
-		while(!buf_empty(inbuf)){
-			ch = buf_shift(inbuf);
-			if(ch == '\b' && !buf_empty(cooked_inbuf)){
-				buf_tail_back(cooked_inbuf);
+			kmutex_lock(&tty.cooked_mutex);
+			if (ch == '\b') {
+				if (!buffq_empty(cooked_inbuf)) {
+					buffq_pop(cooked_inbuf);
+					//log("cooked_inbuf.len=%d\n", cooked_inbuf->cnt);
+					tty_write_char('\b');
+				}
+				kmutex_unlock(&tty.cooked_mutex);
 				continue;
 			}
-			buf_push(cooked_inbuf, ch);
+			need_sleep = 0;
+			buffq_push(cooked_inbuf, ch);
+			buffq_push(outbuf, ch);
+
+			if (ch == '\n') {
+				if (waitq_isempty(&tty.cooked_sem.waitq)) {
+					log("no process wait input, drop\n");
+					buffq_init(cooked_inbuf);
+				}
+				ksema_up(&tty.cooked_sem);
+			}
+			kmutex_unlock(&tty.cooked_mutex);
 		}
-
-
-
+		if (need_sleep) 
+			sleep_on(tty.ttytask);
 	}
+	return 0;
 }
 
-int buf_empty(struct tty_buf *buf)
+int putline(int row, int col, const char* fmt, ...)
 {
-	return buf->cnt <= 0;
-}
-			
-int buf_full(struct tty_buf *buf)
-{
-	return buf->cnt >= TTY_BUF_CNT;
-}
+	static char tmp[128] = {0};
+	va_list ap = NULL;
+	char* p = videoram + (row * MAX_COL + col) * 2;
+	char* q = tmp;
 
-void buf_init(struct tty_buf *buf)
-{
-	buf->head = buf->tail = 0;
-	buf->cnt = 0;
-}
+	va_start(ap, fmt);
+	vsnprintf(tmp, 128, fmt, ap);
+	va_end(ap);
 
-char buf_shift(struct tty_buf *buf)
-{
-	int i = buf->head;
-	if(buf->cnt < 0){
-		return -1;
+	while (*q) {
+		*p = *q;
+		p += 2;
+		q += 1;
 	}
-	buf->head = (i + 1) % TTY_BUF_CNT;	
-	buf->cnt--;
-
-	return buf->data[i];
+	return 0;
 }
-
-int buf_push(struct tty_buf *buf, char ch)
-{
-	int i = buf->tail; 
-	
-	if(buf->cnt >= TTY_BUF_CNT)
-		return 0;	
-
-	buf->data[i] = ch;
-	buf->tail = (i + 1) % TTY_BUF_CNT;
-	buf->cnt++;
-	return 1;
-}
-
-int buf_tail_back(struct tty_buf *buf)
-{
-	if(buf->cnt <= 0){
-		return 0;
-	}else{
-		buf->tail--;
-		buf->cnt--;
-	}
-	return 1;
-}
-		
-	
 	

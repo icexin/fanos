@@ -1,6 +1,6 @@
 CFLAGS:=-nostdlib -nostdinc -fno-builtin -fno-stack-protector -g -I../include
 
-C_SRC:=main.c
+C_SRC:=fs.c
 
 ASM_SRC:= 
 

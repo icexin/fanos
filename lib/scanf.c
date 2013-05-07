@@ -1,24 +1,16 @@
 #include <unistd.h>
+#include <stdio.h>
+#include <string.h>
 
 char *gets(char *str)
 {
-	char *p = str;
-	do{
-		read(0, p, 1);
-	}while(*p++ != '\n');
-
-	*--p = 0;
-	return str;
+	return getline(str, 128);
 }
 
 char *getline(char *str, int len)
 {
-	char *p = str;
-	do{
-		read(0, p, 1);
-	}while(*p++ !='\n' && --len);
-
-	*--p = 0;
+	int cnt = read(0, str, len);
+	str[cnt-1] = '\0';
 	return str;
 }
 
