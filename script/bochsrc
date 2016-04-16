@@ -10,7 +10,7 @@ boot: c
 com1: enabled=1,mode=file,dev="serial"
 mouse: enabled=0
 cpu: ips=15000000
-vga_update_interval: 150000
+#vga_update_interval: 150000
 #display_library: x, options="gui_debug"
 
 #log:log.txt
