@@ -35,10 +35,12 @@ vmlinux26.bin:kernel.bin
 dump:
 	objdump -D kernel.bin | less
 
-kernel.bin:
+libfanos.a:
 	scons -Q
+
+kernel.bin:libfanos.a
 	ld -T script/linker.ld -o$@ libfanos.a
 
-clean:umount
+clean:
 	rm -f kernel.bin
 	scons -c
