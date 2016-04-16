@@ -1,5 +1,5 @@
-#ifndef _STRING_H
-#define _STRING_H
+#ifndef FANOS_STRING_H
+#define FANOS_STRING_H
 #include <fanos/type.h>
 
 char* strtok(char* s, const char* delim);

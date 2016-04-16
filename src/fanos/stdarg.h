@@ -1,5 +1,5 @@
-#ifndef _STDARG_H
-#define _STDARG_H
+#ifndef FANOS_STDARG_H
+#define FANOS_STDARG_H
 
 #define _INTSIZEOF(n) ((sizeof(n)+3) & ~3)
 

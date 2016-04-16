@@ -1,5 +1,5 @@
-#ifndef _HD_H
-#define _HD_H
+#ifndef FANOS_HD_H
+#define FANOS_HD_H
 
 void hd_init();
 

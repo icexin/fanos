@@ -1,5 +1,5 @@
-#ifndef _SHCHEDULE_H
-#define _SHCHEDULE_H
+#ifndef FANOS_SHCHEDULE_H
+#define FANOS_SHCHEDULE_H
 
 #include <fanos/type.h>
 

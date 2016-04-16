@@ -1,7 +1,5 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <sys.h>
-#include <stdarg.h>
+#include <usr/syscall.h>
+#include <usr/stdarg.h>
 
 int write(int fd, char *buf, int len)
 {

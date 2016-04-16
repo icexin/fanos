@@ -1,5 +1,5 @@
-#ifndef _MEM_H
-#define _MEM_H
+#ifndef FANOS_MEM_H
+#define FANOS_MEM_H
 
 #define PAGE_SIZE (4*1024)
 #define FREE_MEM_START (2*1024*1024)

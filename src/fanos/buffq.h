@@ -1,5 +1,5 @@
-#ifndef _BUFFQ_H
-#define _BUFFQ_H
+#ifndef FANOS_BUFFQ_H
+#define FANOS_BUFFQ_H
 
 #define BUFFQ_LEN 512
 struct buffq{

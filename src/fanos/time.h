@@ -1,5 +1,5 @@
-#ifndef _TIME_H
-#define _TIME_H
+#ifndef FANOS_TIME_H
+#define FANOS_TIME_H
 #include <fanos/type.h>
 
 long sys_ticks();

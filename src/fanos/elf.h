@@ -1,5 +1,5 @@
-#ifndef _ELF_H
-#define _ELF_H
+#ifndef FANOS_ELF_H
+#define FANOS_ELF_H
 
 typedef unsigned int Elf32_Addr;
 typedef unsigned short Elf32_Half;

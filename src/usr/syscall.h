@@ -1,5 +1,5 @@
-#ifndef FANOS_SYS_H
-#define FANOS_SYS_H
+#ifndef USR_SYSCALL_H
+#define USR_SYSCALL_H
 
 #define SYS_WRITE 0
 #define SYS_TICKS 1

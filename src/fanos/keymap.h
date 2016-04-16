@@ -1,5 +1,5 @@
-#ifndef _KEYBOARD_H
-#define _KEYBOARD_H
+#ifndef FANOS_KEYBOARD_H
+#define FANOS_KEYBOARD_H
 
 
 /* Shift key offset. */

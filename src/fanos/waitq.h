@@ -1,5 +1,5 @@
-#ifndef _WAITQ_H
-#define _WAITQ_H
+#ifndef FANOS_WAITQ_H
+#define FANOS_WAITQ_H
 
 #include <fanos/task.h>
 
@@ -18,4 +18,5 @@ int waitq_init(struct waitq_t* q);
 int waitq_append(struct waitq_t* q, waitq_type data);
 int waitq_pop(struct waitq_t* q, waitq_type* data);
 int waitq_isempty(struct waitq_t* q);
+
 #endif

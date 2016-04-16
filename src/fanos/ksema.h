@@ -1,5 +1,5 @@
-#ifndef _KSEMA_H
-#define _KSEMA_H
+#ifndef FANOS_KSEMA_H
+#define FANOS_KSEMA_H
 
 #include <fanos/waitq.h>
 #include <fanos/system.h>
@@ -17,4 +17,5 @@ int ksema_up(struct ksema* sem);
 int kmutex_lock(kmutex *mutex);
 int kmutex_unlock(kmutex *mutex);
 int kmutex_init(kmutex *mutex);
+
 #endif

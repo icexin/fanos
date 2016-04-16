@@ -1,5 +1,5 @@
-#ifndef _TASK_H
-#define _TASK_H
+#ifndef FANOS_TASK_H
+#define FANOS_TASK_H
 #include <fanos/system.h>
 #include <fanos/type.h>
 
@@ -101,7 +101,7 @@ struct tss_t
 struct task_t
 {
 	struct tss_t tss;
-	struct desc ldt[3];	
+	struct desc ldt[3];
 	void* start_addr;
 	pid_t pid;
 	pid_t ppid;

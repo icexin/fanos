@@ -1,5 +1,5 @@
-#ifndef _SYSTEM_H
-#define _SYSTEM_H
+#ifndef FANOS_SYSTEM_H
+#define FANOS_SYSTEM_H
 
 #include <fanos/type.h>
 

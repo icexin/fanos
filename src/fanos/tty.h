@@ -1,5 +1,5 @@
-#ifndef _TTY_H
-#define _TTY_H
+#ifndef FANOS_TTY_H
+#define FANOS_TTY_H
 
 #include <fanos/schedule.h>
 #include <fanos/waitq.h>
