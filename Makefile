@@ -5,8 +5,6 @@ CFLAGS:=-nostdlib -nostdinc -fno-builtin -fno-stack-protector -g -Iinclude -Wall
 .PHONY:all kernel begin mount umount
 all: kernel
 
-kernel:kernel.bin
-
 mount:
 	mkdir -p ramfs osimg
 	sudo mount  -o loop,offset=32256 images/hd.img osimg
@@ -35,11 +33,9 @@ vmlinux26.bin:kernel.bin
 dump:
 	objdump -D kernel.bin | less
 
-libfanos.a:
+kernel:
 	scons -Q
-
-kernel.bin:libfanos.a
-	ld -T script/linker.ld -o$@ libfanos.a
+	ld -T script/linker.ld -okernel.bin libfanos.a
 
 clean:
 	rm -f kernel.bin

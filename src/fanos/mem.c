@@ -11,18 +11,19 @@ char process_mem_map[32];
 void *get_free_page()
 {
 	int i;
-	for(i=(FREE_MEM_START>>12); i<FREE_MEM_END>>12; i++){
+
+	for(i=page_idx(FREE_MEM_START); i<page_idx(FREE_MEM_END); i++){
 		if(!page_map[i]){
 			page_map[i] = 1;
-			return (void*)(i<<12);
+			return idx_to_page(i);
 		}
 	}
 	return NULL;
 }
 
-void free_page(void *page)
+void free_page(void *addr)
 {
-	int i = (int)page >> 12;
+	int i = page_idx(addr);
 	assert((int)page >= FREE_MEM_START && (int)page <= FREE_MEM_END);
 	page_map[i] = 0;
 }
@@ -42,7 +43,7 @@ void *alloc_process_mem()
 
 void free_process_mem(void *mem)
 {
-	int i = (int)mem >> 20;
+	int i = page_idx(mem);
 	assert(i>=12 && i<32);
 	process_mem_map[i] = 0;
 	process_mem_map[i+1] = 0;
@@ -52,8 +53,8 @@ static void use_page(void *start, void *end)
 {
 	int s, e;
 	int i;
-	s = ((uint32)start & 0xFFFFF000) >> 12;
-	e = ((uint32)end & 0xFFFFF000) >> 12;
+	s = page_idx(addr_to_page(start));
+	e = page_idx(addr_to_page(end));
 	for(i=s; i<=e; i++){
 		page_map[i] = 1;
 	}
