@@ -60,9 +60,12 @@ static void use_page(void *start, void *end)
 	}
 }
 
+extern void kmalloc_init();
+
 void init_mem()
 {
 	/*2M以下不使用*/
 	use_page(0, FREE_MEM_START);
 	use_page(ramfs_start, ramfs_end);
+	kmalloc_init();
 }
