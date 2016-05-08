@@ -1,9 +1,9 @@
-CC=gcc
-ASM=nasm
-CFLAGS:=-nostdlib -nostdinc -fno-builtin -fno-stack-protector -g -Iinclude -Wall -DDEBUG
-
 .PHONY:all kernel begin mount umount
 all: kernel
+
+kernel:
+	scons -Q
+	ld -T script/linker.ld -okernel.bin libfanos.a
 
 mount:
 	mkdir -p ramfs osimg
@@ -25,17 +25,6 @@ debug:kernel
 	sudo cp kernel.bin osimg/kernel.bin &&sync
 	#bochs_dbg -q   -f script/bochsrc_dbg &
 	qemu-system-i386 images/hd.img -serial stdio -s -S -machine accel=tcg
-
-vmlinux26.bin:kernel.bin
-	objcopy -O binary $^ $@
-	cp $@ /var/www/weblinux/ -f
-
-dump:
-	objdump -D kernel.bin | less
-
-kernel:
-	scons -Q
-	ld -T script/linker.ld -okernel.bin libfanos.a
 
 clean:
 	rm -f kernel.bin
