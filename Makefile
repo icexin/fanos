@@ -3,7 +3,7 @@ all: kernel
 
 kernel:
 	scons -Q
-	ld -T script/linker.ld -okernel.bin libfanos.a
+	ld -m elf_i386 -T script/linker.ld -okernel.bin libfanos.a
 
 mount:
 	mkdir -p ramfs osimg

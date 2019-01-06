@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 #encoding:utf8
 import subprocess
 import signal
@@ -80,7 +82,8 @@ CFLAGS = [
     '-Wall',
     #'-Werror',
     '-DDEBUG',
-    '-Werror=implicit-function-declaration'
+    '-Werror=implicit-function-declaration',
+    '-m32'
 ]
 
 env = Environment()
@@ -89,4 +92,4 @@ env.VariantDir('build', 'src')
 
 env.Library('fanos',
     Glob('build/fanos/*.c') + Glob('build/fanos/*.S'),
-    CFLAGS=CFLAGS, CPPPATH=['src'])
+            CFLAGS=CFLAGS, ASFLAGS=['-m32'], CPPPATH=['src'])
