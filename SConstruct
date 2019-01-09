@@ -4,6 +4,7 @@
 import subprocess
 import signal
 import sys
+import os
 
 def error_colorize(message):
     _ERRORS = [': error:', ': fatal error:', ': undefined reference to',
@@ -82,14 +83,16 @@ CFLAGS = [
     '-Wall',
     #'-Werror',
     '-DDEBUG',
-    '-Werror=implicit-function-declaration',
-    '-m32'
+    '-Werror=implicit-function-declaration'
 ]
 
-env = Environment()
+env = Environment(ENV = os.environ)
 env['SPAWN'] = echospawn
+env['CC'] = "i386-elf-gcc"
+env['AR'] = "i386-elf-ar"
+env['RANLIB'] = 'i386-elf-ranlib'
 env.VariantDir('build', 'src')
 
 env.Library('fanos',
     Glob('build/fanos/*.c') + Glob('build/fanos/*.S'),
-            CFLAGS=CFLAGS, ASFLAGS=['-m32'], CPPPATH=['src'])
+            CFLAGS=CFLAGS, CPPPATH=['src'])
